@@ -2,6 +2,8 @@ export module p3.grid;
 import <vector>;
 import <array>;
 
+// import <algorithm>;
+
 namespace p3
 {
 #pragma region nested list
@@ -29,8 +31,24 @@ namespace p3
 
 	export
 	template <size_t dim>
-	struct grid_size : std::array<size_t, dim>
+	class grid_pos : public std::array<size_t, dim>
 	{
+	public:
+
+		constexpr void fix_zeroes()
+		{
+			// std::transform(this->begin(), this->end(), this->begin(), [](auto elem) { return std::max(1U, elem); });
+
+			// import <algorithm>; is giving me the same problems. temporary solution it is, again!
+			for (auto &elem : *this)
+			{
+				if (!elem)
+				{
+					elem = 1;
+				}
+			}
+		}
+
 		[[nodiscard]] constexpr size_t elements() const
 		{
 			// return std::accumulate(this->begin(), this->end(), 1, std::multiplies{});
@@ -45,23 +63,54 @@ namespace p3
 			return result;
 		}
 
-		[[nodiscard]] constexpr size_t index_of(const grid_size<dim> &position) const
+		[[nodiscard]] constexpr size_t index_of(const grid_pos<dim> &position) const
 		{
 			size_t result = 0, layer_size = 1;
-
-			auto size_it = this->rbegin();
-			auto pos_it = position.rbegin();
-
-			for (size_t i = 0; i < dim; ++i, ++pos_it, ++size_it)
+			dual_iteration(this->rbegin(), position.rbegin(), [&](size_t size, size_t pos)
 			{
-				result += layer_size * (*pos_it);
-				layer_size *= (*size_it);
+				result += layer_size * pos;
+				layer_size *= size;
+			});
+			return result;
+		}
+		[[nodiscard]] constexpr size_t index_in(const grid_pos<dim> &boundary) const
+		{
+			return boundary.index_of(*this);
+		}
+
+		[[nodiscard]] static constexpr grid_pos<dim> from_index(size_t index, const grid_pos<dim> &boundary)
+		{
+			grid_pos<dim> result{};
+			dual_iteration(boundary.rbegin(), result.rbegin(), [&](size_t size, size_t &pos)
+			{
+				pos = index % size;
+				index /= size;
+			});
+			return result;
+		}
+
+		[[nodiscard]] constexpr grid_pos<dim> fit_to_data(size_t needed_elements, size_t axis = 0) const
+		{
+			auto result = *this;
+			result.fix_zeroes();
+
+			if (result.elements() != needed_elements)
+			{
+				const auto subgrid_size = result.elements() / result[axis];
+				const auto remainder  = needed_elements % subgrid_size;
+				result[axis] = needed_elements / subgrid_size + (remainder > 0);
 			}
 			return result;
 		}
-		[[nodiscard]] constexpr size_t index_in(const grid_size<dim> &boundary) const
+
+	private:
+		template <typename iter1_type, typename iter2_type, typename function_type>
+		static constexpr void dual_iteration(iter1_type iter1, iter2_type iter2, const function_type &callback)
 		{
-			return boundary.index_of(*this);
+			for (size_t i = 0; i < dim; ++i, ++iter1, ++iter2)
+			{
+				callback(*iter1, *iter2);
+			}
 		}
 	};
 
@@ -81,7 +130,7 @@ namespace p3
 		// nested list constructor
 
 		// size + list constructor
-		explicit grid(const grid_size<dim> &size, const std::initializer_list<data_type> &init = {})
+		explicit grid(const grid_pos<dim> &size, const std::initializer_list<data_type> &init = {})
 			: m_size(size), m_data(m_size.elements())
 		{
 
@@ -101,7 +150,7 @@ namespace p3
 			return dim;
 		}
 
-		[[nodiscard]] constexpr grid_size<dim> dimensions() const
+		[[nodiscard]] constexpr grid_pos<dim> dimensions() const
 		{
 			return m_size;
 		}
@@ -119,7 +168,28 @@ namespace p3
 #pragma endregion
 #pragma region accessors and iterators
 
-		// accessors, iterators
+		data_type &operator[](size_t index)
+		{
+			return m_data[index];
+		}
+
+		const data_type &operator[](size_t index) const
+		{
+			return m_data[index];
+		}
+
+		data_type &at(const grid_pos<dim> &pos)
+		{
+			return m_data[m_size.index_of(pos)];
+		}
+
+		const data_type &at(const grid_pos<dim> &pos) const
+		{
+			return m_data[m_size.index_of(pos)];
+		}
+
+
+		// iterators
 
 #pragma endregion
 #pragma region partitons (subgrid, slice)
@@ -131,9 +201,8 @@ namespace p3
 		// kernel shennanigans?
 
 	private:
-		grid_size<dim> m_size;
+		grid_pos<dim> m_size;
 		std::vector<data_type> m_data;
-
 	};
 
 #pragma endregion
