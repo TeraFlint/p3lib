@@ -6,6 +6,7 @@ namespace p3
 {
 #pragma region nested list
 
+	/*
 	template <typename data_type, size_t dim>
 	struct nested_list
 	{
@@ -21,6 +22,7 @@ namespace p3
 	export
 	template <typename data_type, size_t dimensions>
 	using nested_list_t = typename nested_list<data_type, dimensions>::type;
+	*/
 
 #pragma endregion
 #pragma region grid size
@@ -42,6 +44,25 @@ namespace p3
 			}
 			return result;
 		}
+
+		[[nodiscard]] constexpr size_t index_of(const grid_size<dim> &position) const
+		{
+			size_t result = 0, layer_size = 1;
+
+			auto size_it = this->rbegin();
+			auto pos_it = position.rbegin();
+
+			for (size_t i = 0; i < dim; ++i, ++pos_it, ++size_it)
+			{
+				result += layer_size * (*pos_it);
+				layer_size *= (*size_it);
+			}
+			return result;
+		}
+		[[nodiscard]] constexpr size_t index_in(const grid_size<dim> &boundary) const
+		{
+			return boundary.index_of(*this);
+		}
 	};
 
 #pragma endregion
@@ -52,17 +73,68 @@ namespace p3
 	class grid
 	{
 	public:
+#pragma region constructors
 
-		// various constructors
+		// default
+		grid() = default;
+
+		// nested list constructor
+
+		// size + list constructor
+		explicit grid(const grid_size<dim> &size, const std::initializer_list<data_type> &init = {})
+			: m_size(size), m_data(m_size.elements())
+		{
+
+		}
+
+		// size + generator constructor
+
+		// grid + converter constructor
+
+
+
+#pragma endregion
+#pragma region meta data
+
+		[[nodiscard]] constexpr size_t rank() const
+		{
+			return dim;
+		}
+
+		[[nodiscard]] constexpr grid_size<dim> dimensions() const
+		{
+			return m_size;
+		}
+
+		[[nodiscard]] constexpr size_t dimension(size_t axis) const
+		{
+			return m_size[axis];
+		}
+
+		[[nodiscard]] constexpr size_t size() const
+		{
+			return m_size.elements();
+		}
+
+#pragma endregion
+#pragma region accessors and iterators
+
 		// accessors, iterators
-		// subgrid (single layer), slice (vector of layers)
-		// kernel?
 
-	private:
-		std::vector<data_type> m_data;
-		// size
-	};
+#pragma endregion
+#pragma region partitons (subgrid, slice)
+
+		// subgrid (single layer), slice (vector of layers)
 
 #pragma endregion
 
+		// kernel shennanigans?
+
+	private:
+		grid_size<dim> m_size;
+		std::vector<data_type> m_data;
+
+	};
+
+#pragma endregion
 }
