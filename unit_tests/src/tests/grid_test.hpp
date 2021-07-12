@@ -17,7 +17,7 @@ P3_UNIT_TEST(grid_nested_lists)
 P3_UNIT_TEST(grid_size_elements)
 {
 	constexpr p3::grid_size<3> size = { 2, 3, 5 };
-	unit_test::assert_equals<size_t>(30U, size.elements(), "grid_size::elements() did not yield the correct result.");
+	unit_test::assert_equals<size_t>(30U, size.elements(), "grid_size::elements()");
 }
 
 P3_UNIT_TEST(grid_default_constructor)

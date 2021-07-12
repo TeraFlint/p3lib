@@ -1,8 +1,6 @@
 export module p3.grid;
-import <functional>; // std::multiplies
-import <numeric>;    // std::accumulate
 import <vector>;
-import <array>;      // grid_size
+import <array>;
 
 namespace p3
 {
@@ -33,7 +31,16 @@ namespace p3
 	{
 		[[nodiscard]] constexpr size_t elements() const
 		{
-			return std::accumulate(this->begin(), this->end(), 1, std::multiplies{});
+			// return std::accumulate(this->begin(), this->end(), 1, std::multiplies{});
+
+			// import <numeric>; import <functional>; => "there are too many errors for the intellisense engine to function properly"
+			// until that's fixed, I'll keep a manual implementation, instead. At least as long as I'm stil developing this class.
+			size_t result = 1;
+			for (const auto &item : *this)
+			{
+				result *= item;
+			}
+			return result;
 		}
 	};
 
