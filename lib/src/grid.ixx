@@ -7,7 +7,7 @@ import <array>;
 // import <numeric>;
 
 // here's a problem: intellisense is not happy with these imports. If any of them is imported, I get:
-// "there are too many errors for the intellisense engine to function properly".
+// "E2996: There are too many errors for the IntelliSense engine to function properly".
 // the problem is: I'd rather have intellisense features during development than getting shorter code.
 // so I will provide the oneliners, but add a todo comment and do the manual implementation. That way I still get support from the IDE.
 // once the classes are finished, I add the imports it and swap out the manual implementations.
@@ -127,13 +127,19 @@ namespace p3
 	template <size_t dimensions>
 	class grid_pos
 	{
-	public:
 
+#pragma region constructors
+
+	public:
 		constexpr grid_pos(const grid_size<dimensions> &size = {})
 			: m_dim{ size }
 		{
 		}
 
+#pragma endregion
+#pragma region accessors
+
+	public:
 		constexpr const grid_size<dimensions> &dim() const
 		{
 			return m_dim;
@@ -152,8 +158,14 @@ namespace p3
 			return m_pos[axis];
 		}
 
-		// first(), last(), next() (operator++), prev() (operator--)
-		// good()
+#pragma endregion
+#pragma region meta data
+
+	public:
+		constexpr bool valid() const
+		{
+			return m_valid;
+		}
 
 		// todo: operator<=>()
 		constexpr bool operator==(const grid_pos<dimensions> &other)
@@ -161,8 +173,17 @@ namespace p3
 			return m_dim == other.m_dim && m_pos == other.m_pos;
 		}
 
+#pragma endregion
+#pragma region manipulators
+
+	public:
+		// first(), last(), next() (operator++), prev() (operator--)
+
+#pragma endregion
+
 	private:
 		grid_size<dimensions> m_dim{}, m_pos{};
+		bool m_valid = true;
 	};
 
 #pragma endregion

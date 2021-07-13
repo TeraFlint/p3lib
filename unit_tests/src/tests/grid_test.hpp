@@ -3,6 +3,8 @@
 
 import p3.grid;
 
+#pragma region nested_list
+
 /*P3_UNIT_TEST(grid_nested_lists)
 {
 	// apparently the IDE is not very happy with the type shenannigans that I did in the module.
@@ -14,6 +16,7 @@ import p3.grid;
 	p3::nested_list_t<int, 3> list_3 = { { { 1, 2 }, { 3, 4 } }, { { 5, 6 }, { 7, 8 } } };
 }*/
 
+#pragma endregion
 #pragma region grid_size
 
 P3_UNIT_TEST(grid_size_elements)
@@ -62,9 +65,11 @@ P3_UNIT_TEST(grid_pos_constructor)
 	constexpr p3::grid_pos<3> default_pos{};
 	constexpr p3::grid_pos<3> size_pos{ size };
 
+	static_assert(default_pos.valid(), "grid_pos::valid()");
 	static_assert(default_pos.pos() == empty_size, "grid_pos::pos()");
 	static_assert(default_pos.dim() == empty_size, "grid_pos::dim()");
 
+	static_assert(size_pos.valid(), "grid_pos::valid()");
 	static_assert(size_pos.pos() == empty_size, "grid_pos::pos()");
 	static_assert(size_pos.dim() ==       size, "grid_pos::dim()");
 }
