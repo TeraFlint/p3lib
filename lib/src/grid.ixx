@@ -135,8 +135,7 @@ namespace p3
 	template <size_t dimensions>
 	class grid_pos
 	{
-
-#pragma region constructors
+	#pragma region constructors
 
 	public:
 		constexpr explicit grid_pos(const grid_size<dimensions> &size = {})
@@ -144,8 +143,8 @@ namespace p3
 		{
 		}
 
-#pragma endregion
-#pragma region accessors
+	#pragma endregion
+	#pragma region accessors
 
 	public:
 		constexpr const grid_size<dimensions> &dim() const
@@ -171,8 +170,8 @@ namespace p3
 			return m_valid;
 		}
 
-#pragma endregion
-#pragma region meta data
+	#pragma endregion
+	#pragma region meta data
 
 	public:
 		constexpr size_t index() const
@@ -186,8 +185,8 @@ namespace p3
 			return m_dim == other.m_dim && m_pos == other.m_pos;
 		}
 
-#pragma endregion
-#pragma region manipulators
+	#pragma endregion
+	#pragma region manipulators
 
 	public:
 		constexpr void first()
@@ -263,11 +262,32 @@ namespace p3
 			return m_valid = false;
 		}
 
-#pragma endregion
+	#pragma endregion
+	#pragma region member variables
 
 	private:
 		grid_size<dimensions> m_dim{}, m_pos{};
 		bool m_valid = true;
+
+	#pragma endregion
+	};
+
+#pragma endregion
+#pragma region grid modifier concept
+
+	template <typename data_type>
+	concept any_type = true;
+
+	/*
+	* This concept makes sure it receives a function-like type capable of accepting a grid_pos.
+	* The return type doesn't matter as all the algorithms using it discard it.
+	* So void functions would make sense, but I'd like to stay compatible to other functions, as well.
+	*/
+	export
+	template <typename function_type, size_t dim>
+	concept grid_modifier = requires(function_type function)
+	{
+		{ function(grid_pos<dim>{}) } -> any_type;
 	};
 
 #pragma endregion
@@ -278,7 +298,7 @@ namespace p3
 	class grid
 	{
 	public:
-#pragma region constructors
+	#pragma region constructors
 
 		// default
 		grid() = default;
@@ -320,8 +340,8 @@ namespace p3
 		// explicit grid(const grid<data_type, dimensions> &other, const converter_type &converter);
 
 
-#pragma endregion
-#pragma region meta data
+	#pragma endregion
+	#pragma region meta data
 
 		[[nodiscard]] constexpr size_t rank() const
 		{
@@ -343,8 +363,8 @@ namespace p3
 			return m_data.size();
 		}
 
-#pragma endregion
-#pragma region accessors and iterators
+	#pragma endregion
+	#pragma region accessors and iterators
 
 		[[nodiscard]] data_type &operator[](size_t index)
 		{
@@ -369,12 +389,12 @@ namespace p3
 
 		// iterators
 
-#pragma endregion
-#pragma region partitons (subgrid, slice)
+	#pragma endregion
+	#pragma region partitons (subgrid, slice)
 
 		// subgrid (single layer), slice (vector of layers)
 
-#pragma endregion
+	#pragma endregion
 
 		// kernel shennanigans?
 
