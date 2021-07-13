@@ -5,3 +5,5 @@ This is my second attempt of a nicely structured library, which I'm going to fil
 The library will make heavy use of C++ modules and concepts, so C++20 will be an absolute neccessity to use this thing.
 
 My aim is to keep it cross-platform, but depending on the situation with the planned image class (as I've used the WIC library for that in the past), I'm not sure if I can commit to this. Either way, any platform specific code will be wrapped in a preprocessor block, so linux users can still compile it, albeit with limited functionality.
+
+If you're wondering where this weird namespace name is coming from: "P3" is my abbreviation of "Pitri".

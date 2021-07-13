@@ -96,6 +96,7 @@ namespace p3
 			});
 			return result;
 		}
+
 		[[nodiscard]] constexpr size_t index_in(const grid_size<dimensions> &boundary) const
 		{
 			return boundary.index_of(*this);
@@ -197,7 +198,7 @@ namespace p3
 		constexpr void last()
 		{
 			// todo: import <algorithm>;
-			// std::transform(m_dim.begin(), m_dim.end(), m_pos.begin(), [](auto x) { return x ? x-1 : 0; });
+			// std::transform(m_dim.begin(), m_dim.end(), m_pos.begin(), [](auto x) { return x > 0 ? x - 1 : 0; });
 
 			auto iter = m_pos.begin();
 			for (const auto &axis : m_dim)
@@ -234,14 +235,6 @@ namespace p3
 			return iterate_backwards_until(can_terminate, operation, reset);
 		}
 
-		constexpr grid_pos<dimensions> operator++()
-		{
-			next();
-			return *this;
-		}
-
-		// (operator++), (operator--)
-
 	private:
 		template <typename check_type, typename operation_type, typename reset_type>
 		constexpr bool iterate_backwards_until(const check_type &can_terminate, const operation_type &operation, const reset_type &reset)
@@ -260,6 +253,36 @@ namespace p3
 				reset(*dim_iter, *pos_iter);
 			}
 			return m_valid = false;
+		}
+
+	#pragma endregion
+	#pragma region operators
+
+	public:
+		constexpr grid_pos<dimensions> &operator++()
+		{
+			next();
+			return *this;
+		}
+
+		constexpr grid_pos<dimensions> operator++(int)
+		{
+			auto copy = *this;
+			next();
+			return copy;
+		}
+
+		constexpr grid_pos<dimensions> &operator--()
+		{
+			prev();
+			return *this;
+		}
+
+		constexpr grid_pos<dimensions> operator--(int)
+		{
+			auto copy = *this;
+			prev();
+			return copy;
 		}
 
 	#pragma endregion
@@ -297,9 +320,9 @@ namespace p3
 	template <typename data_type, size_t dimensions>
 	class grid
 	{
-	public:
-	#pragma region constructors
+#pragma region constructors
 
+	public:
 		// default
 		grid() = default;
 
@@ -308,41 +331,53 @@ namespace p3
 
 		// size constructor
 		explicit grid(const grid_size<dimensions> &size)
-			: m_dim(size), m_data(m_dim.elements())
+			: m_dim{ size }, m_data(m_dim.elements())
 		{
 		}
 
 		// size + list constructor
 		explicit grid(const grid_size<dimensions> &size, const std::initializer_list<data_type> &init)
-			: m_dim(size.fit_to_data(init.size()))
+			: m_dim{ size.fit_to_data(init.size()) }
 		{
-			const auto elements = m_dim.elements();
-			m_data.reserve(elements);
-
-			// todo: import <algorithm>;
-			// std::copy(init.begin(), init.end(), std::back_inserter(m_data));
-			for (const auto &item : init)
+			reserve_fill_resize([&]()
 			{
-				m_data.push_back(item);
-			}
-
-			// grow into the allocated space and fill the rest with default objects
-			m_data.resize(elements);
+				// todo: import <algorithm>;
+				// std::copy(init.begin(), init.end(), std::back_inserter(m_data));
+				for (const auto &item : init)
+				{
+					m_data.push_back(item);
+				}
+			});
 		}
 
 		// size + generator constructor
-		// template <grid_modifier generator_type>
-		// explicit grid(const grid_size<dimensions> &size, const generator_type &generator);
+		template <grid_modifier<dimensions> generator_type>
+		explicit grid(const grid_size<dimensions> &size, const generator_type &generator)
+			: m_dim{ size }
+		{
+			// todo
+		}
 
 
 		// grid + converter constructor
-		// template <grid_modifier converter_type>
+		// template <grid_modifier<dimensions> converter_type>
 		// explicit grid(const grid<data_type, dimensions> &other, const converter_type &converter);
 
+	private:
+		template <typename function_type>
+		void reserve_fill_resize(const function_type &fill)
+		{
+			// performs one single allocation and grows into the space (with default objects) in the end.
+			const auto elements = m_dim.elements();
+			m_data.reserve(elements);
+			fill();
+			m_data.resize(elements);
+		}
 
 	#pragma endregion
 	#pragma region meta data
 
+	public:
 		[[nodiscard]] constexpr size_t rank() const
 		{
 			return dimensions;
@@ -366,6 +401,7 @@ namespace p3
 	#pragma endregion
 	#pragma region accessors and iterators
 
+	public:
 		[[nodiscard]] data_type &operator[](size_t index)
 		{
 			return m_data[index];

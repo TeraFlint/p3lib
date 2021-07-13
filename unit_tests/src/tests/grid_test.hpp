@@ -192,6 +192,29 @@ P3_UNIT_TEST(grid_constructor_size_incomplete_list)
 	}
 }
 
+P3_UNIT_TEST(grid_constructor_generator)
+{
+	const auto operation = [](auto a, auto b) { return a + b; };
+
+	constexpr p3::grid_size<2> size{ 10, 10 };
+	const p3::grid<int, 2> grid{ size, [&](const auto &pos) -> int { return operation(pos.pos_at(0), pos.pos_at(1)); } };
+	
+	for (size_t i = 0; i < grid.rank(); ++i)
+	{
+		unit_test::assert_equals<size_t>(size[i], grid.dim_at(i));
+	}
+
+	/*for (size_t y = 0; y < grid.dim_at(0); ++y)
+	{
+		for (size_t x = 0; x < grid.dim_at(1); ++x)
+		{
+			const auto expected = operation(y, x);
+			const auto actual = grid.at({y, x});
+			unit_test::assert_equals<int>(expected, actual, std::format("grid::at({{{0}, {1}}})", x, y));
+		}
+	}*/
+}
+
 P3_UNIT_TEST(grid_value_assignment)
 {
 	constexpr p3::grid_size<2> position = { 1, 2 };
