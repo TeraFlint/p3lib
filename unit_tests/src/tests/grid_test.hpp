@@ -62,13 +62,11 @@ P3_UNIT_TEST(grid_pos_constructor)
 	constexpr p3::grid_pos<3> default_pos{};
 	constexpr p3::grid_pos<3> size_pos{ size };
 
-	/*
 	static_assert(default_pos.pos() == empty_size, "grid_pos::pos()");
 	static_assert(default_pos.dim() == empty_size, "grid_pos::dim()");
 
 	static_assert(size_pos.pos() == empty_size, "grid_pos::pos()");
 	static_assert(size_pos.dim() ==       size, "grid_pos::dim()");
-	*/
 }
 
 #pragma endregion
@@ -88,8 +86,8 @@ P3_UNIT_TEST(grid_constructor_size)
 
 	for (size_t i = 0; i < size.size(); ++i)
 	{
-		unit_test::assert_equals<size_t>(size[i], grid.dimensions()[i], std::format("grid::dimensions()[{0}]", i));
-		unit_test::assert_equals<size_t>(size[i], grid.dimension(i),    std::format("grid::dimension({0})", i));
+		unit_test::assert_equals<size_t>(size[i], grid.dim()[i],  std::format("grid::dim()[{0}]", i));
+		unit_test::assert_equals<size_t>(size[i], grid.dim_at(i), std::format("grid::dim_at({0})", i));
 	}
 }
 
@@ -98,9 +96,9 @@ P3_UNIT_TEST(grid_constructor_size_complete_list)
 	const p3::grid<unsigned, 2> grid{{3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9}};
 	
 	size_t index = 1;
-	for (size_t y = 0; y < grid.dimension(1); ++y)
+	for (size_t y = 0; y < grid.dim_at(1); ++y)
 	{
-		for (size_t x = 0; x < grid.dimension(0); ++x)
+		for (size_t x = 0; x < grid.dim_at(0); ++x)
 		{
 			unit_test::assert_equals(index, grid.at({y, x}), std::format("grid::at({{{0}, {1}}})", y, x));
 			++index;
@@ -111,7 +109,7 @@ P3_UNIT_TEST(grid_constructor_size_complete_list)
 P3_UNIT_TEST(grid_constructor_size_incomplete_list)
 {
 	const p3::grid<unsigned, 3> grid{ { 2, 2, 2 }, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 } };
-	unit_test::assert_equals<size_t>(4, grid.dimension(0), "grid::dimension(0)");
+	unit_test::assert_equals<size_t>(4, grid.dim_at(0), "grid::dim_at(0)");
 
 	const size_t incrementing_until = 13;
 	for (size_t i = 0; i < incrementing_until; ++i)
@@ -132,7 +130,7 @@ P3_UNIT_TEST(grid_value_assignment)
 
 	p3::grid<char, 2> grid{ { 4, 3 } };
 
-	const auto position_index = [&]() { return grid.dimensions().index_of(position); };
+	const auto position_index = [&]() { return grid.dim().index_of(position); };
 	const auto get_expected = [&](size_t index, char val) { return index == position_index() ? val : '\0'; };
 
 	// sorry, iterators aren't implemented, yet.

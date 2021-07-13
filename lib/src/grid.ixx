@@ -18,10 +18,10 @@ namespace p3
 #pragma region nested list
 
 	/*
-	template <typename data_type, size_t dim>
+	template <typename data_type, size_t dimensions>
 	struct nested_list
 	{
-		using type = std::initializer_list<typename nested_list<data_type, dim - 1>::type>;
+		using type = std::initializer_list<typename nested_list<data_type, dimensions - 1>::type>;
 	};
 
 	template <typename data_type>
@@ -39,8 +39,8 @@ namespace p3
 #pragma region grid size
 
 	export
-	template <size_t dim>
-	class grid_size : public std::array<size_t, dim>
+	template <size_t dimensions>
+	class grid_size : public std::array<size_t, dimensions>
 	{
 	public:
 
@@ -69,7 +69,7 @@ namespace p3
 			return result;
 		}
 
-		[[nodiscard]] constexpr size_t index_of(const grid_size<dim> &position) const
+		[[nodiscard]] constexpr size_t index_of(const grid_size<dimensions> &position) const
 		{
 			size_t result = 0, layer_size = 1;
 			dual_iteration(this->rbegin(), position.rbegin(), [&](size_t size, size_t pos)
@@ -79,14 +79,14 @@ namespace p3
 			});
 			return result;
 		}
-		[[nodiscard]] constexpr size_t index_in(const grid_size<dim> &boundary) const
+		[[nodiscard]] constexpr size_t index_in(const grid_size<dimensions> &boundary) const
 		{
 			return boundary.index_of(*this);
 		}
 
-		[[nodiscard]] static constexpr grid_size<dim> from_index(size_t index, const grid_size<dim> &boundary)
+		[[nodiscard]] static constexpr grid_size<dimensions> from_index(size_t index, const grid_size<dimensions> &boundary)
 		{
-			grid_size<dim> result{};
+			grid_size<dimensions> result{};
 			dual_iteration(boundary.rbegin(), result.rbegin(), [&](size_t size, size_t &pos)
 			{
 				pos = index % size;
@@ -95,7 +95,7 @@ namespace p3
 			return result;
 		}
 
-		[[nodiscard]] constexpr grid_size<dim> fit_to_data(size_t needed_elements, size_t axis = 0) const
+		[[nodiscard]] constexpr grid_size<dimensions> fit_to_data(size_t needed_elements, size_t axis = 0) const
 		{
 			auto result = *this;
 			result.fix_zeroes();
@@ -113,7 +113,7 @@ namespace p3
 		template <typename iter1_type, typename iter2_type, typename function_type>
 		static constexpr void dual_iteration(iter1_type iter1, iter2_type iter2, const function_type &callback)
 		{
-			for (size_t i = 0; i < dim; ++i, ++iter1, ++iter2)
+			for (size_t i = 0; i < dimensions; ++i, ++iter1, ++iter2)
 			{
 				callback(*iter1, *iter2);
 			}
@@ -124,19 +124,24 @@ namespace p3
 #pragma region grid position
 
 	export
-	template <size_t dim_>
+	template <size_t dimensions>
 	class grid_pos
 	{
 	public:
 
-		constexpr grid_pos() = default;
-
-		constexpr grid_pos(const grid_size<dim_> &size)
+		constexpr grid_pos(const grid_size<dimensions> &size = {})
 			: m_dim{ size }
 		{
 		}
 
-		// pos(), dim()
+		constexpr const grid_size<dimensions> &dim() const
+		{
+			return m_dim;
+		}
+		constexpr const grid_size<dimensions> &pos() const
+		{
+			return m_pos;
+		}
 
 		constexpr const size_t &dim_at(const size_t axis) const
 		{
@@ -151,20 +156,20 @@ namespace p3
 		// good()
 
 		// todo: operator<=>()
-		constexpr bool operator==(const grid_pos<dim_> &other)
+		constexpr bool operator==(const grid_pos<dimensions> &other)
 		{
 			return m_dim == other.m_dim && m_pos == other.m_pos;
 		}
 
 	private:
-		grid_size<dim_> m_dim{}, m_pos{};
+		grid_size<dimensions> m_dim{}, m_pos{};
 	};
 
 #pragma endregion
 #pragma region grid
 
 	export
-	template <typename data_type, size_t dim>
+	template <typename data_type, size_t dimensions>
 	class grid
 	{
 	public:
@@ -174,19 +179,19 @@ namespace p3
 		grid() = default;
 
 		// implicit nested list constructor
-		// grid(const nested_list_t<data_type, dim> &list);
+		// grid(const nested_list_t<data_type, dimensions> &list);
 
 		// size constructor
-		explicit grid(const grid_size<dim> &size)
-			: m_size(size), m_data(m_size.elements())
+		explicit grid(const grid_size<dimensions> &size)
+			: m_dim(size), m_data(m_dim.elements())
 		{
 		}
 
 		// size + list constructor
-		explicit grid(const grid_size<dim> &size, const std::initializer_list<data_type> &init)
-			: m_size(size.fit_to_data(init.size()))
+		explicit grid(const grid_size<dimensions> &size, const std::initializer_list<data_type> &init)
+			: m_dim(size.fit_to_data(init.size()))
 		{
-			const auto elements = m_size.elements();
+			const auto elements = m_dim.elements();
 			m_data.reserve(elements);
 
 			// todo: import <algorithm>;
@@ -202,12 +207,12 @@ namespace p3
 
 		// size + generator constructor
 		// template <grid_modifier generator_type>
-		// explicit grid(const grid_size<dim> &size, const generator_type &generator);
+		// explicit grid(const grid_size<dimensions> &size, const generator_type &generator);
 
 
 		// grid + converter constructor
 		// template <grid_modifier converter_type>
-		// explicit grid(const grid<data_type, dim> &other, const converter_type &converter);
+		// explicit grid(const grid<data_type, dimensions> &other, const converter_type &converter);
 
 
 #pragma endregion
@@ -215,17 +220,17 @@ namespace p3
 
 		[[nodiscard]] constexpr size_t rank() const
 		{
-			return dim;
+			return dimensions;
 		}
 
-		[[nodiscard]] constexpr grid_size<dim> dimensions() const
+		[[nodiscard]] constexpr grid_size<dimensions> dim() const
 		{
-			return m_size;
+			return m_dim;
 		}
 
-		[[nodiscard]] constexpr size_t dimension(size_t axis) const
+		[[nodiscard]] constexpr size_t dim_at(size_t axis) const
 		{
-			return m_size[axis];
+			return m_dim[axis];
 		}
 
 		[[nodiscard]] constexpr size_t size() const
@@ -246,14 +251,14 @@ namespace p3
 			return m_data[index];
 		}
 
-		[[nodiscard]] data_type &at(const grid_size<dim> &pos)
+		[[nodiscard]] data_type &at(const grid_size<dimensions> &pos)
 		{
-			return m_data[m_size.index_of(pos)];
+			return m_data[m_dim.index_of(pos)];
 		}
 
-		[[nodiscard]] const data_type &at(const grid_size<dim> &pos) const
+		[[nodiscard]] const data_type &at(const grid_size<dimensions> &pos) const
 		{
-			return m_data[m_size.index_of(pos)];
+			return m_data[m_dim.index_of(pos)];
 		}
 
 
@@ -269,7 +274,7 @@ namespace p3
 		// kernel shennanigans?
 
 	private:
-		grid_size<dim> m_size;
+		grid_size<dimensions> m_dim;
 		std::vector<data_type> m_data;
 	};
 
