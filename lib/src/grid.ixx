@@ -398,9 +398,13 @@ namespace p3
 
 		// kernel shennanigans?
 
+	#pragma region member variables
+
 	private:
 		grid_size<dimensions> m_dim;
 		std::vector<data_type> m_data;
+
+	#pragma endregion
 	};
 
 #pragma endregion

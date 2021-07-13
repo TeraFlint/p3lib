@@ -1,6 +1,6 @@
 # Pitri's C++20 library
 
-This is my second attempt of a nicely structured library, which I'm going to fill with (hopefully) useful and generalized C++ classes.
+This is my second attempt of a nicely structured library, which I'm going to fill with (hopefully) useful and generalized C++ classes. This time with a test driven approach, there's going to be really high test coverage!
 
 The library will make heavy use of C++ modules and concepts, so C++20 will be an absolute neccessity to use this thing.
 
