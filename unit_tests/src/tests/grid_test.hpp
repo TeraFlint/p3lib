@@ -1,5 +1,5 @@
 #pragma once
-#include "../unit_tests.hpp"
+#include "../unit_test.hpp"
 
 import p3.grid;
 

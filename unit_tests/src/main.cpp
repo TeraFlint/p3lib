@@ -2,5 +2,7 @@
 
 int main(int argc, char **argv)
 {
-	unit_test::run();
+	auto results = unit_test::run();
+	std::cout << std::endl;
+	unit_test::evaluate(results);
 }

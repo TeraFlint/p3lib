@@ -138,6 +138,35 @@ namespace unit_test
 	}
 
 #pragma endregion
+#pragma region evaluation
+
+	inline void evaluate(std::size_t successful, std::size_t total)
+	{
+		std::cout << "Final unit test summary:" << std::endl;
+
+		const double percentage = 100.0 * successful / total;
+		std::cout << std::format(" -> Successful tests: {2}% ({0}/{1})", successful, total, percentage) << std::endl;
+
+		const std::string summary = successful == total ? "You may push your code! :)" : "Do not upload this code! :(";
+		const auto color = successful == total ? text::green2 : text::red2;
+		std::cout << color << " -> " << summary << text::white1 << std::endl;
+	}
+
+	inline void evaluate(const std::map<key_type, result_type> &results)
+	{
+		std::size_t successful = 0, total = 0;
+		for (const auto &[name, result] : results)
+		{
+			if (result)
+			{
+				++successful;
+			}
+			++total;
+		}
+		evaluate(successful, total);
+	}
+
+#pragma endregion
 #pragma region assertions
 
 	template <bool useless = true>
