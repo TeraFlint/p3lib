@@ -15,6 +15,22 @@ import <array>;
 
 namespace p3
 {
+#pragma region helper functions (not supposed to be exported)
+
+	template <typename iter1_type, typename iter2_type, typename function_type>
+	static constexpr bool dual_iteration_n(size_t iterations, iter1_type iter1, iter2_type iter2, const function_type &callback)
+	{
+		for (size_t i = 0; i < iterations; ++i, ++iter1, ++iter2)
+		{
+			if (!callback(*iter1, *iter2))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+#pragma endregion
 #pragma region nested list
 
 	/*
@@ -72,10 +88,11 @@ namespace p3
 		[[nodiscard]] constexpr size_t index_of(const grid_size<dimensions> &position) const
 		{
 			size_t result = 0, layer_size = 1;
-			dual_iteration(this->rbegin(), position.rbegin(), [&](size_t size, size_t pos)
+			dual_iteration_n(dimensions, this->rbegin(), position.rbegin(), [&](size_t size, size_t pos)
 			{
 				result += layer_size * pos;
 				layer_size *= size;
+				return true;
 			});
 			return result;
 		}
@@ -87,10 +104,11 @@ namespace p3
 		[[nodiscard]] static constexpr grid_size<dimensions> from_index(size_t index, const grid_size<dimensions> &boundary)
 		{
 			grid_size<dimensions> result{};
-			dual_iteration(boundary.rbegin(), result.rbegin(), [&](size_t size, size_t &pos)
+			dual_iteration_n(dimensions, boundary.rbegin(), result.rbegin(), [&](size_t size, size_t &pos)
 			{
 				pos = index % size;
 				index /= size;
+				return true;
 			});
 			return result;
 		}
@@ -107,16 +125,6 @@ namespace p3
 				result[axis] = needed_elements / subgrid_size + (remainder > 0);
 			}
 			return result;
-		}
-
-	private:
-		template <typename iter1_type, typename iter2_type, typename function_type>
-		static constexpr void dual_iteration(iter1_type iter1, iter2_type iter2, const function_type &callback)
-		{
-			for (size_t i = 0; i < dimensions; ++i, ++iter1, ++iter2)
-			{
-				callback(*iter1, *iter2);
-			}
 		}
 	};
 
@@ -158,22 +166,22 @@ namespace p3
 			return m_pos[axis];
 		}
 
-#pragma endregion
-#pragma region meta data
-
-	public:
 		constexpr bool valid() const
 		{
 			return m_valid;
 		}
 
+#pragma endregion
+#pragma region meta data
+
+	public:
 		constexpr size_t index() const
 		{
 			return m_dim.index_of(m_pos);
 		}
 
 		// todo: operator<=>()
-		constexpr bool operator==(const grid_pos<dimensions> &other)
+		constexpr bool operator==(const grid_pos<dimensions> &other) const
 		{
 			return m_dim == other.m_dim && m_pos == other.m_pos;
 		}
@@ -200,6 +208,17 @@ namespace p3
 			}
 		}
 
+		constexpr bool jump(const grid_size<dimensions> &pos)
+		{
+			const auto check = [](auto dim, auto pos) { return pos < dim; };
+			const bool in_bounds = dual_iteration_n(dimensions, m_dim.begin(), pos.begin(), check);
+			if (in_bounds)
+			{
+				m_pos = pos;
+			}
+			return in_bounds;
+		}
+
 		constexpr bool next()
 		{
 			const auto can_terminate = [](const auto &dim, auto &pos) { return pos + 1 < dim; };
@@ -214,6 +233,12 @@ namespace p3
 			const auto operation     = [](const auto &dim, auto &pos) { --pos; };
 			const auto reset         = [](const auto &dim, auto &pos) { pos = dim - 1; };
 			return iterate_backwards_until(can_terminate, operation, reset);
+		}
+
+		constexpr grid_pos<dimensions> operator++()
+		{
+			next();
+			return *this;
 		}
 
 		// (operator++), (operator--)

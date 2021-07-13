@@ -74,6 +74,61 @@ P3_UNIT_TEST(grid_pos_constructor)
 	static_assert(size_pos.dim() ==       size, "grid_pos::dim()");
 }
 
+P3_UNIT_TEST(grid_pos_jump)
+{
+	p3::grid_pos<3> pos{ {2, 4, 8} };
+
+	const auto assert_jump = [&](bool expected, const p3::grid_size<3> &to_pos)
+	{
+		const auto actual = pos.jump(to_pos);
+		unit_test::assert_equals<bool>(expected, actual, std::format("grid_pos::jump({{{0}, {1}, {2}}})", to_pos[0], to_pos[1], to_pos[2]));
+	};
+
+	assert_jump(true, { 0, 0, 0 });
+	assert_jump(true, { 1, 1, 1 });
+	assert_jump(true, { 1, 2, 3 });
+	assert_jump(true, { 1, 3, 2 });
+	assert_jump(true, { 1, 3, 7 });
+
+	assert_jump(false, { 2, 0, 0 });
+	assert_jump(false, { 0, 4, 0 });
+	assert_jump(false, { 0, 0, 8 });
+	assert_jump(false, { 2, 4, 8 });
+}
+
+P3_UNIT_TEST(grid_pos_next_prev)
+{
+	p3::grid_pos<2> pos{ {7, 3} };
+	pos.jump({ 3, 2 });
+
+	const auto copy1 = pos;
+	pos.next();
+	const auto copy2 = pos;
+	pos.prev();
+	const auto copy3 = pos;
+
+	if (copy1 != copy3)
+	{
+		unit_test::assert_equals(0, 1, "grid_pos: next(); prev(); copies are not equal");
+	}
+
+	unit_test::assert_equals<size_t>(copy1.index() + 1, copy2.index(), "grid_pos::index() is not higher than the old value");
+	unit_test::assert_equals<size_t>(copy1.index(), copy3.index(), "grid_pos::index() did not return to the old value");
+}
+
+P3_UNIT_TEST(grid_pos_index)
+{
+	constexpr p3::grid_size<4> size{ 7, 3, 5, 2 };
+	constexpr auto elements = size.elements();
+
+	size_t index = 0;
+	for (p3::grid_pos<4> pos{ size }; pos.valid(); ++pos, ++index)
+	{
+		unit_test::assert_equals<size_t>(index, pos.index(), "grid_pos::index()");
+	}
+	unit_test::assert_equals<size_t>(elements, index, "grid_pos final count of iterations");
+}
+
 P3_UNIT_TEST(grid_pos_overflow)
 {
 	p3::grid_pos<3> pos{ {2, 2, 2} };
