@@ -13,6 +13,10 @@ import <array>;
 // once the classes are finished, I add the imports it and swap out the manual implementations.
 // thanks to the added unit tests, I'll then be able to see if it broke or not.
 
+
+// also, big todo: replace this with actual constexpr once std::vector is actually constexpr compatible...
+#define VEC_CXP constexpr
+
 namespace p3
 {
 #pragma region helper functions (not supposed to be exported)
@@ -193,19 +197,21 @@ namespace p3
 		constexpr void first()
 		{
 			m_pos = {};
+			m_valid = true;
 		}
 
 		constexpr void last()
 		{
 			// todo: import <algorithm>;
 			// std::transform(m_dim.begin(), m_dim.end(), m_pos.begin(), [](auto x) { return x > 0 ? x - 1 : 0; });
-
 			auto iter = m_pos.begin();
 			for (const auto &axis : m_dim)
 			{
 				*iter = axis ? axis - 1 : 0;
 				++iter;
 			}
+
+			m_valid = true;
 		}
 
 		constexpr bool jump(const grid_size<dimensions> &pos)
@@ -215,6 +221,7 @@ namespace p3
 			if (in_bounds)
 			{
 				m_pos = pos;
+				m_valid = true;
 			}
 			return in_bounds;
 		}
@@ -301,11 +308,9 @@ namespace p3
 	template <typename data_type>
 	concept any_type = true;
 
-	/*
-	* This concept makes sure it receives a function-like type capable of accepting a grid_pos.
-	* The return type doesn't matter as all the algorithms using it discard it.
-	* So void functions would make sense, but I'd like to stay compatible to other functions, as well.
-	*/
+	// This concept makes sure it receives a function-like type capable of accepting a grid_pos.
+	// The return type doesn't matter as all the algorithms using it discard it.
+	// So void functions would make sense, but I'd like to stay compatible to other functions, as well.
 	export
 	template <typename function_type, size_t dim>
 	concept grid_modifier = requires(function_type function)
@@ -324,22 +329,22 @@ namespace p3
 
 	public:
 		// default
-		grid() = default;
+		VEC_CXP grid() = default;
 
 		// implicit nested list constructor
 		// grid(const nested_list_t<data_type, dimensions> &list);
 
 		// size constructor
-		explicit grid(const grid_size<dimensions> &size)
+		explicit VEC_CXP grid(const grid_size<dimensions> &size)
 			: m_dim{ size }, m_data(m_dim.elements())
 		{
 		}
 
 		// size + list constructor
-		explicit grid(const grid_size<dimensions> &size, const std::initializer_list<data_type> &init)
+		explicit VEC_CXP grid(const grid_size<dimensions> &size, const std::initializer_list<data_type> &init)
 			: m_dim{ size.fit_to_data(init.size()) }
 		{
-			reserve_fill_resize([&]()
+			const auto fill = [&]()
 			{
 				// todo: import <algorithm>;
 				// std::copy(init.begin(), init.end(), std::back_inserter(m_data));
@@ -347,25 +352,32 @@ namespace p3
 				{
 					m_data.push_back(item);
 				}
-			});
+			};
+			reserve_fill_resize(fill);
 		}
 
 		// size + generator constructor
 		template <grid_modifier<dimensions> generator_type>
-		explicit grid(const grid_size<dimensions> &size, const generator_type &generator)
+		explicit VEC_CXP grid(const grid_size<dimensions> &size, const generator_type &generator)
 			: m_dim{ size }
 		{
-			// todo
+			const auto fill = [&]()
+			{
+				for (grid_pos<dimensions> pos{ m_dim }; pos.valid(); ++pos)
+				{
+					m_data.push_back(generator(pos));
+				}
+			};
+			reserve_fill_resize(fill);
 		}
 
-
 		// grid + converter constructor
-		// template <grid_modifier<dimensions> converter_type>
-		// explicit grid(const grid<data_type, dimensions> &other, const converter_type &converter);
+		// template <typename compatible_type, grid_modifier<dimensions> converter_type>
+		// explicit grid(const grid<compatible_type, dimensions> &other, const converter_type &converter);
 
 	private:
 		template <typename function_type>
-		void reserve_fill_resize(const function_type &fill)
+		VEC_CXP void reserve_fill_resize(const function_type &fill)
 		{
 			// performs one single allocation and grows into the space (with default objects) in the end.
 			const auto elements = m_dim.elements();
@@ -402,22 +414,22 @@ namespace p3
 	#pragma region accessors and iterators
 
 	public:
-		[[nodiscard]] data_type &operator[](size_t index)
+		[[nodiscard]] VEC_CXP data_type &operator[](size_t index)
 		{
 			return m_data[index];
 		}
 
-		[[nodiscard]] const data_type &operator[](size_t index) const
+		[[nodiscard]] VEC_CXP const data_type &operator[](size_t index) const
 		{
 			return m_data[index];
 		}
 
-		[[nodiscard]] data_type &at(const grid_size<dimensions> &pos)
+		[[nodiscard]] VEC_CXP data_type &at(const grid_size<dimensions> &pos)
 		{
 			return m_data[m_dim.index_of(pos)];
 		}
 
-		[[nodiscard]] const data_type &at(const grid_size<dimensions> &pos) const
+		[[nodiscard]] VEC_CXP const data_type &at(const grid_size<dimensions> &pos) const
 		{
 			return m_data[m_dim.index_of(pos)];
 		}
