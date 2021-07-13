@@ -25,13 +25,13 @@ P3_UNIT_TEST(grid_size_elements)
 P3_UNIT_TEST(grid_size_index)
 {
 	constexpr p3::grid_size<3> boundary{ 5, 4, 3 };
-	static_assert( 0 == boundary.index_of({ 0, 0, 0 }), "boundary::index_of({ 0, 0, 0 })");
-	static_assert( 1 == boundary.index_of({ 0, 0, 1 }), "boundary::index_of({ 0, 0, 1 })");
-	static_assert( 3 == boundary.index_of({ 0, 1, 0 }), "boundary::index_of({ 0, 1, 0 })");
-	static_assert(12 == boundary.index_of({ 1, 0, 0 }), "boundary::index_of({ 1, 0, 0 })");
-	static_assert(16 == boundary.index_of({ 1, 1, 1 }), "boundary::index_of({ 1, 1, 1 })");
-	static_assert(59 == boundary.index_of({ 4, 3, 2 }), "boundary::index_of({ 4, 3, 2 })");
-	static_assert( 7 == boundary.index_of({ 0, 2, 1 }), "boundary::index_of({ 0, 2, 1 })");
+	static_assert( 0 == boundary.index_of({ 0, 0, 0 }), "grid_size::index_of({ 0, 0, 0 })");
+	static_assert( 1 == boundary.index_of({ 0, 0, 1 }), "grid_size::index_of({ 0, 0, 1 })");
+	static_assert( 3 == boundary.index_of({ 0, 1, 0 }), "grid_size::index_of({ 0, 1, 0 })");
+	static_assert(12 == boundary.index_of({ 1, 0, 0 }), "grid_size::index_of({ 1, 0, 0 })");
+	static_assert(16 == boundary.index_of({ 1, 1, 1 }), "grid_size::index_of({ 1, 1, 1 })");
+	static_assert(59 == boundary.index_of({ 4, 3, 2 }), "grid_size::index_of({ 4, 3, 2 })");
+	static_assert( 7 == boundary.index_of({ 0, 2, 1 }), "grid_size::index_of({ 0, 2, 1 })");
 
 	for (size_t i = 0; i < boundary.elements(); ++i)
 	{
@@ -49,6 +49,26 @@ P3_UNIT_TEST(grid_size_fitting)
 	static_assert(1 == size.fit_to_data(4)[0]);
 	static_assert(1 == size.fit_to_data(5)[0]);
 	static_assert(2 == size.fit_to_data(6)[0]);
+}
+
+#pragma endregion
+#pragma region grid_pos
+
+P3_UNIT_TEST(grid_pos_constructor)
+{
+	constexpr p3::grid_size<3> empty_size{};
+	constexpr p3::grid_size<3> size = { 3, 5, 7 };
+
+	constexpr p3::grid_pos<3> default_pos{};
+	constexpr p3::grid_pos<3> size_pos{ size };
+
+	/*
+	static_assert(default_pos.pos() == empty_size, "grid_pos::pos()");
+	static_assert(default_pos.dim() == empty_size, "grid_pos::dim()");
+
+	static_assert(size_pos.pos() == empty_size, "grid_pos::pos()");
+	static_assert(size_pos.dim() ==       size, "grid_pos::dim()");
+	*/
 }
 
 #pragma endregion

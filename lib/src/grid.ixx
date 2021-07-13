@@ -124,16 +124,40 @@ namespace p3
 #pragma region grid position
 
 	export
-	template <size_t dim>
+	template <size_t dim_>
 	class grid_pos
 	{
 	public:
 
-		// first, last, next
-		// pos(), size()
+		constexpr grid_pos() = default;
+
+		constexpr grid_pos(const grid_size<dim_> &size)
+			: m_dim{ size }
+		{
+		}
+
+		// pos(), dim()
+
+		constexpr const size_t &dim_at(const size_t axis) const
+		{
+			return m_dim[axis];
+		}
+		constexpr const size_t &pos_at(const size_t axis) const
+		{
+			return m_pos[axis];
+		}
+
+		// first(), last(), next() (operator++), prev() (operator--)
+		// good()
+
+		// todo: operator<=>()
+		constexpr bool operator==(const grid_pos<dim_> &other)
+		{
+			return m_dim == other.m_dim && m_pos == other.m_pos;
+		}
 
 	private:
-		grid_size<dim> m_pos, m_size;
+		grid_size<dim_> m_dim{}, m_pos{};
 	};
 
 #pragma endregion
