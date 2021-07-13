@@ -104,4 +104,33 @@ P3_UNIT_TEST(grid_constructor_size_incomplete_list)
 	}
 }
 
+P3_UNIT_TEST(grid_value_assignment)
+{
+	constexpr p3::grid_size<2> position = { 1, 2 };
+	constexpr char val1 = 'a';
+	constexpr char val2 = 'b';
+
+	p3::grid<char, 2> grid{ { 4, 3 } };
+
+	const auto position_index = [&]() { return grid.dimensions().index_of(position); };
+	const auto get_expected = [&](size_t index, char val) { return index == position_index() ? val : '\0'; };
+
+	// sorry, iterators aren't implemented, yet.
+	grid.at(position) = val1;
+	for (size_t i = 0; i < grid.size(); ++i)
+	{
+		const auto actual = grid[i];
+		const auto expected = get_expected(i, val1);
+		unit_test::assert_equals<char>(expected, actual, std::format("grid::at() = {0};", val1));
+	}
+
+	grid[position_index()] = val2;
+	for (size_t i = 0; i < grid.size(); ++i)
+	{
+		const auto actual = grid[i];
+		const auto expected = get_expected(i, val2);
+		unit_test::assert_equals<char>(expected, actual, std::format("grid::operator[]() = {0};", val2));
+	}
+}
+
 #pragma endregion

@@ -2,7 +2,16 @@ export module p3.grid;
 import <vector>;
 import <array>;
 
+// import <functional>;
 // import <algorithm>;
+// import <numeric>;
+
+// here's a problem: intellisense is not happy with these imports. If any of them is imported, I get:
+// "there are too many errors for the intellisense engine to function properly".
+// the problem is: I'd rather have intellisense features during development than getting shorter code.
+// so I will provide the oneliners, but add a todo comment and do the manual implementation. That way I still get support from the IDE.
+// once the classes are finished, I add the imports it and swap out the manual implementations.
+// thanks to the added unit tests, I'll then be able to see if it broke or not.
 
 namespace p3
 {
@@ -37,9 +46,8 @@ namespace p3
 
 		constexpr void fix_zeroes()
 		{
+			// todo: import <algorithm>;
 			// std::transform(this->begin(), this->end(), this->begin(), [](auto elem) { return std::max(1U, elem); });
-
-			// import <algorithm>; is giving me the same problems. temporary solution it is, again!
 			for (auto &elem : *this)
 			{
 				if (!elem)
@@ -51,10 +59,8 @@ namespace p3
 
 		[[nodiscard]] constexpr size_t elements() const
 		{
+			// todo: import <numeric>; import <functional>;
 			// return std::accumulate(this->begin(), this->end(), 1, std::multiplies{});
-
-			// import <numeric>; import <functional>; => "there are too many errors for the intellisense engine to function properly"
-			// until that's fixed, I'll keep a manual implementation, instead. At least as long as I'm stil developing this class.
 			size_t result = 1;
 			for (const auto &item : *this)
 			{
@@ -154,9 +160,20 @@ namespace p3
 
 		// size + list constructor
 		explicit grid(const grid_size<dim> &size, const std::initializer_list<data_type> &init)
-			: m_size(size.fit_to_data(init.size())), m_data(init.begin(), init.end())
+			: m_size(size.fit_to_data(init.size()))
 		{
-			m_data.resize(m_size.elements());
+			const auto elements = m_size.elements();
+			m_data.reserve(elements);
+
+			// todo: import <algorithm>;
+			// std::copy(init.begin(), init.end(), std::back_inserter(m_data));
+			for (const auto &item : init)
+			{
+				m_data.push_back(item);
+			}
+
+			// grow into the allocated space and fill the rest with default objects
+			m_data.resize(elements);
 		}
 
 		// size + generator constructor
