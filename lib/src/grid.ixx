@@ -31,7 +31,7 @@ namespace p3
 
 	export
 	template <size_t dim>
-	class grid_pos : public std::array<size_t, dim>
+	class grid_size : public std::array<size_t, dim>
 	{
 	public:
 
@@ -63,7 +63,7 @@ namespace p3
 			return result;
 		}
 
-		[[nodiscard]] constexpr size_t index_of(const grid_pos<dim> &position) const
+		[[nodiscard]] constexpr size_t index_of(const grid_size<dim> &position) const
 		{
 			size_t result = 0, layer_size = 1;
 			dual_iteration(this->rbegin(), position.rbegin(), [&](size_t size, size_t pos)
@@ -73,14 +73,14 @@ namespace p3
 			});
 			return result;
 		}
-		[[nodiscard]] constexpr size_t index_in(const grid_pos<dim> &boundary) const
+		[[nodiscard]] constexpr size_t index_in(const grid_size<dim> &boundary) const
 		{
 			return boundary.index_of(*this);
 		}
 
-		[[nodiscard]] static constexpr grid_pos<dim> from_index(size_t index, const grid_pos<dim> &boundary)
+		[[nodiscard]] static constexpr grid_size<dim> from_index(size_t index, const grid_size<dim> &boundary)
 		{
-			grid_pos<dim> result{};
+			grid_size<dim> result{};
 			dual_iteration(boundary.rbegin(), result.rbegin(), [&](size_t size, size_t &pos)
 			{
 				pos = index % size;
@@ -89,7 +89,7 @@ namespace p3
 			return result;
 		}
 
-		[[nodiscard]] constexpr grid_pos<dim> fit_to_data(size_t needed_elements, size_t axis = 0) const
+		[[nodiscard]] constexpr grid_size<dim> fit_to_data(size_t needed_elements, size_t axis = 0) const
 		{
 			auto result = *this;
 			result.fix_zeroes();
@@ -97,7 +97,7 @@ namespace p3
 			if (result.elements() != needed_elements)
 			{
 				const auto subgrid_size = result.elements() / result[axis];
-				const auto remainder  = needed_elements % subgrid_size;
+				const auto remainder = needed_elements % subgrid_size;
 				result[axis] = needed_elements / subgrid_size + (remainder > 0);
 			}
 			return result;
@@ -115,6 +115,22 @@ namespace p3
 	};
 
 #pragma endregion
+#pragma region grid position
+
+	export
+	template <size_t dim>
+	class grid_pos
+	{
+	public:
+
+		// first, last, next
+		// pos(), size()
+
+	private:
+		grid_size<dim> m_pos, m_size;
+	};
+
+#pragma endregion
 #pragma region grid
 
 	export
@@ -127,19 +143,30 @@ namespace p3
 		// default
 		grid() = default;
 
-		// nested list constructor
+		// implicit nested list constructor
+		// grid(const nested_list_t<data_type, dim> &list);
 
-		// size + list constructor
-		explicit grid(const grid_pos<dim> &size, const std::initializer_list<data_type> &init = {})
+		// size constructor
+		explicit grid(const grid_size<dim> &size)
 			: m_size(size), m_data(m_size.elements())
 		{
+		}
 
+		// size + list constructor
+		explicit grid(const grid_size<dim> &size, const std::initializer_list<data_type> &init)
+			: m_size(size.fit_to_data(init.size())), m_data(init.begin(), init.end())
+		{
+			m_data.resize(m_size.elements());
 		}
 
 		// size + generator constructor
+		// template <grid_modifier generator_type>
+		// explicit grid(const grid_size<dim> &size, const generator_type &generator);
+
 
 		// grid + converter constructor
-
+		// template <grid_modifier converter_type>
+		// explicit grid(const grid<data_type, dim> &other, const converter_type &converter);
 
 
 #pragma endregion
@@ -150,7 +177,7 @@ namespace p3
 			return dim;
 		}
 
-		[[nodiscard]] constexpr grid_pos<dim> dimensions() const
+		[[nodiscard]] constexpr grid_size<dim> dimensions() const
 		{
 			return m_size;
 		}
@@ -162,28 +189,28 @@ namespace p3
 
 		[[nodiscard]] constexpr size_t size() const
 		{
-			return m_size.elements();
+			return m_data.size();
 		}
 
 #pragma endregion
 #pragma region accessors and iterators
 
-		data_type &operator[](size_t index)
+		[[nodiscard]] data_type &operator[](size_t index)
 		{
 			return m_data[index];
 		}
 
-		const data_type &operator[](size_t index) const
+		[[nodiscard]] const data_type &operator[](size_t index) const
 		{
 			return m_data[index];
 		}
 
-		data_type &at(const grid_pos<dim> &pos)
+		[[nodiscard]] data_type &at(const grid_size<dim> &pos)
 		{
 			return m_data[m_size.index_of(pos)];
 		}
 
-		const data_type &at(const grid_pos<dim> &pos) const
+		[[nodiscard]] const data_type &at(const grid_size<dim> &pos) const
 		{
 			return m_data[m_size.index_of(pos)];
 		}
@@ -201,7 +228,7 @@ namespace p3
 		// kernel shennanigans?
 
 	private:
-		grid_pos<dim> m_size;
+		grid_size<dim> m_size;
 		std::vector<data_type> m_data;
 	};
 

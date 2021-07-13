@@ -14,17 +14,17 @@ import p3.grid;
 	p3::nested_list_t<int, 3> list_3 = { { { 1, 2 }, { 3, 4 } }, { { 5, 6 }, { 7, 8 } } };
 }*/
 
-#pragma region grid_pos
+#pragma region grid_size
 
-P3_UNIT_TEST(grid_pos_elements)
+P3_UNIT_TEST(grid_size_elements)
 {
-	constexpr p3::grid_pos<4> size{ 2, 3, 5, 7 };
-	unit_test::assert_equals<size_t>(210U, size.elements(), "grid_pos::elements()");
+	constexpr p3::grid_size<4> size{ 2, 3, 5, 7 };
+	unit_test::assert_equals<size_t>(210U, size.elements(), "grid_size::elements()");
 }
 
-P3_UNIT_TEST(grid_pos_index)
+P3_UNIT_TEST(grid_size_index)
 {
-	constexpr p3::grid_pos<3> boundary{ 5, 4, 3 };
+	constexpr p3::grid_size<3> boundary{ 5, 4, 3 };
 	static_assert( 0 == boundary.index_of({ 0, 0, 0 }), "boundary::index_of({ 0, 0, 0 })");
 	static_assert( 1 == boundary.index_of({ 0, 0, 1 }), "boundary::index_of({ 0, 0, 1 })");
 	static_assert( 3 == boundary.index_of({ 0, 1, 0 }), "boundary::index_of({ 0, 1, 0 })");
@@ -35,15 +35,15 @@ P3_UNIT_TEST(grid_pos_index)
 
 	for (size_t i = 0; i < boundary.elements(); ++i)
 	{
-		const auto position = p3::grid_pos<3>::from_index(i, boundary);
+		const auto position = p3::grid_size<3>::from_index(i, boundary);
 		const auto index = position.index_in(boundary);
-		unit_test::assert_equals<size_t>(i, index, "grid_pos::index_in()");
+		unit_test::assert_equals<size_t>(i, index, "grid_size::index_in()");
 	}
 }
 
-P3_UNIT_TEST(grid_pos_fitting)
+P3_UNIT_TEST(grid_size_fitting)
 {
-	constexpr p3::grid_pos<2> size{ 1, 5 };
+	constexpr p3::grid_size<2> size{ 1, 5 };
 	constexpr auto elements = size.elements();
 
 	static_assert(1 == size.fit_to_data(4)[0]);
@@ -52,6 +52,7 @@ P3_UNIT_TEST(grid_pos_fitting)
 }
 
 #pragma endregion
+#pragma region grid
 
 P3_UNIT_TEST(grid_constructor_default)
 {
@@ -60,7 +61,7 @@ P3_UNIT_TEST(grid_constructor_default)
 
 P3_UNIT_TEST(grid_constructor_size)
 {
-	constexpr p3::grid_pos<3> size{ 2, 3, 2 };
+	constexpr p3::grid_size<3> size{ 2, 3, 2 };
 	const p3::grid<int, 3> grid(size);
 
 	unit_test::assert_equals<size_t>(3, grid.rank(), "grid::rank()");
@@ -68,16 +69,15 @@ P3_UNIT_TEST(grid_constructor_size)
 	for (size_t i = 0; i < size.size(); ++i)
 	{
 		unit_test::assert_equals<size_t>(size[i], grid.dimensions()[i], std::format("grid::dimensions()[{0}]", i));
-		unit_test::assert_equals<size_t>(size[i], grid.dimension(i),    std::format("grid::dimensions({0})", i));
+		unit_test::assert_equals<size_t>(size[i], grid.dimension(i),    std::format("grid::dimension({0})", i));
 	}
 }
 
 P3_UNIT_TEST(grid_constructor_size_complete_list)
 {
-	/*
 	const p3::grid<unsigned, 2> grid{{3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9}};
 	
-	size_t index = 0;
+	size_t index = 1;
 	for (size_t y = 0; y < grid.dimension(1); ++y)
 	{
 		for (size_t x = 0; x < grid.dimension(0); ++x)
@@ -86,5 +86,22 @@ P3_UNIT_TEST(grid_constructor_size_complete_list)
 			++index;
 		}
 	}
-	*/
 }
+
+P3_UNIT_TEST(grid_constructor_size_incomplete_list)
+{
+	const p3::grid<unsigned, 3> grid{ { 2, 2, 2 }, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 } };
+	unit_test::assert_equals<size_t>(4, grid.dimension(0), "grid::dimension(0)");
+
+	const size_t incrementing_until = 13;
+	for (size_t i = 0; i < incrementing_until; ++i)
+	{
+		unit_test::assert_equals<size_t>(i+1, grid[i], "value initialized part");
+	}
+	for (size_t i = incrementing_until; i < grid.size(); ++i)
+	{
+		unit_test::assert_equals<size_t>(0, grid[i], "zero-initialized part");
+	}
+}
+
+#pragma endregion
