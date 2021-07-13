@@ -74,6 +74,16 @@ P3_UNIT_TEST(grid_pos_constructor)
 	static_assert(size_pos.dim() ==       size, "grid_pos::dim()");
 }
 
+P3_UNIT_TEST(grid_pos_overflow)
+{
+	p3::grid_pos<3> pos{ {2, 2, 2} };
+	unit_test::assert_equals<bool>(true, pos.valid(), "grid_pos::valid()");
+	pos.last();
+	unit_test::assert_equals<bool>(true, pos.valid(), "grid_pos::valid()");
+	pos.next();
+	unit_test::assert_equals<bool>(false, pos.valid(), "grid_pos::valid()");
+}
+
 #pragma endregion
 #pragma region grid
 

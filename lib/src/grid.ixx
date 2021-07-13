@@ -131,7 +131,7 @@ namespace p3
 #pragma region constructors
 
 	public:
-		constexpr grid_pos(const grid_size<dimensions> &size = {})
+		constexpr explicit grid_pos(const grid_size<dimensions> &size = {})
 			: m_dim{ size }
 		{
 		}
@@ -167,6 +167,11 @@ namespace p3
 			return m_valid;
 		}
 
+		constexpr size_t index() const
+		{
+			return m_dim.index_of(m_pos);
+		}
+
 		// todo: operator<=>()
 		constexpr bool operator==(const grid_pos<dimensions> &other)
 		{
@@ -177,7 +182,61 @@ namespace p3
 #pragma region manipulators
 
 	public:
-		// first(), last(), next() (operator++), prev() (operator--)
+		constexpr void first()
+		{
+			m_pos = {};
+		}
+
+		constexpr void last()
+		{
+			// todo: import <algorithm>;
+			// std::transform(m_dim.begin(), m_dim.end(), m_pos.begin(), [](auto x) { return x ? x-1 : 0; });
+
+			auto iter = m_pos.begin();
+			for (const auto &axis : m_dim)
+			{
+				*iter = axis ? axis - 1 : 0;
+				++iter;
+			}
+		}
+
+		constexpr bool next()
+		{
+			const auto can_terminate = [](const auto &dim, auto &pos) { return pos + 1 < dim; };
+			const auto operation     = [](const auto &dim, auto &pos) { ++pos; };
+			const auto reset         = [](const auto &dim, auto &pos) { pos = 0; };
+			return iterate_backwards_until(can_terminate, operation, reset);
+		}
+
+		constexpr bool prev()
+		{
+			const auto can_terminate = [](const auto &dim, auto &pos) { return pos > 0; };
+			const auto operation     = [](const auto &dim, auto &pos) { --pos; };
+			const auto reset         = [](const auto &dim, auto &pos) { pos = dim - 1; };
+			return iterate_backwards_until(can_terminate, operation, reset);
+		}
+
+		// (operator++), (operator--)
+
+	private:
+		template <typename check_type, typename operation_type, typename reset_type>
+		constexpr bool iterate_backwards_until(const check_type &can_terminate, const operation_type &operation, const reset_type &reset)
+		{
+			auto dim_iter = m_dim.crbegin();
+			auto pos_iter = m_pos.rbegin();
+			for (size_t i = 0; i < dimensions; ++i, ++dim_iter, ++pos_iter)
+			{
+				// do the operation if you can and report success
+				if (can_terminate(*dim_iter, *pos_iter))
+				{
+					operation(*dim_iter, *pos_iter);
+					return true;
+				}
+				// otherwise reset and carry (a.k.a. retry in the next iteration)
+				reset(*dim_iter, *pos_iter);
+			}
+			return m_valid = false;
+		}
 
 #pragma endregion
 
