@@ -74,6 +74,31 @@ P3_UNIT_TEST(grid_pos_constructor)
 	static_assert(size_pos.dim() ==       size, "grid_pos::dim()");
 }
 
+P3_UNIT_TEST(grid_pos_comparison)
+{
+	constexpr p3::grid_size<4> size = { 3, 4, 5, 3 };
+	constexpr p3::grid_size<4> pos = { 2, 2, 1, 2 };
+
+	constexpr p3::grid_pos<4> direct{ size, pos };
+	static_assert(direct == direct, "grid_pos: object did not equal itself");
+
+	p3::grid_pos<4> jump{ size };
+	if (jump != jump)
+	{
+		unit_test::assert_equals(0, 1, "grid_pos: object did not equal itself");
+	}
+	if (direct == jump)
+	{
+		unit_test::assert_equals(0, 1, "grid_pos: two differently valued object achieved equality");
+	}
+
+	jump.jump(pos);
+	if (direct != jump)
+	{
+		unit_test::assert_equals(0, 1, "grid_pos: two equaly valued object did not achieve equality");
+	}
+}
+
 P3_UNIT_TEST(grid_pos_jump)
 {
 	p3::grid_pos<3> pos{ {2, 4, 8} };
@@ -242,7 +267,6 @@ P3_UNIT_TEST(grid_constructor_converter)
 	}
 }
 
-
 P3_UNIT_TEST(grid_value_assignment)
 {
 	constexpr p3::grid_size<2> position = { 1, 2 };
@@ -305,6 +329,18 @@ P3_UNIT_TEST(grid_iterators)
 	{
 		unit_test::assert_equals<int>(0, elem, "grid: iterator writing didn't work");
 	}
+}
+
+P3_UNIT_TEST(grid_comparison)
+{
+	p3::grid<int, 3> default1, default2;
+	if (default1 != default2)
+	{
+		unit_test::assert_equals(0, 1, "grid: default constructed elements did not achieve equality");
+	}
+
+	// ...
+
 }
 
 #pragma endregion

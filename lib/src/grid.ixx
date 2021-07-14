@@ -3,6 +3,7 @@ import <vector>;
 import <array>;
 
 // import <functional>;
+// import <stdexcept>;
 // import <algorithm>;
 // import <numeric>;
 
@@ -15,7 +16,7 @@ import <array>;
 
 
 // also, big todo: replace this with actual constexpr once std::vector is actually constexpr compatible...
-#define VEC_CXP constexpr
+#define VEC_CXP
 
 namespace p3
 {
@@ -144,8 +145,22 @@ namespace p3
 
 	public:
 		constexpr explicit grid_pos(const grid_size<dimensions> &size = {})
-			: m_dim{ size }
+			: m_dim{ size }, m_pos{}
 		{
+		}
+
+		constexpr explicit grid_pos(const grid_size<dimensions> &size, const grid_size<dimensions> &position)
+			: m_dim{ size }, m_pos{ position }
+		{
+			const auto check = [](auto dim, auto pos) { return pos < dim; };
+			const bool in_bounds = dual_iteration_n(dimensions, m_dim.begin(), m_pos.begin(), check);
+
+			if (!in_bounds)
+			{
+				// todo: import <stdexcept>;
+				// throw std::out_of_range("grid_pos: position is outside its boundaries.");
+				throw "grid_pos: position is outside its boundaries.";
+			}
 		}
 
 	#pragma endregion
@@ -179,16 +194,12 @@ namespace p3
 	#pragma region meta data
 
 	public:
-		constexpr size_t index() const
+		[[nodiscard]] constexpr size_t index() const
 		{
 			return m_dim.index_of(m_pos);
 		}
 
-		// todo: operator<=>()
-		constexpr bool operator==(const grid_pos<dimensions> &other) const
-		{
-			return m_dim == other.m_dim && m_pos == other.m_pos;
-		}
+		[[nodiscard]] VEC_CXP auto operator<=>(const grid_pos<dimensions> &other) const = default;
 
 	#pragma endregion
 	#pragma region manipulators
@@ -296,7 +307,7 @@ namespace p3
 	#pragma region member variables
 
 	private:
-		grid_size<dimensions> m_dim{}, m_pos{};
+		grid_size<dimensions> m_dim, m_pos;
 		bool m_valid = true;
 
 	#pragma endregion
@@ -308,7 +319,8 @@ namespace p3
 	template <typename data_type>
 	concept any_type = true;
 
-	// This concept makes sure it receives a function-like type capable of accepting a grid_pos.
+	// This concept is here to disambiguate between initializer_list and a generator function.
+	// It makes sure it receives a function-like type capable of accepting a grid_pos.
 	// The return type doesn't matter as all the algorithms using it discard it.
 	// So void functions would make sense, but I'd like to stay compatible to other functions, as well.
 	export
@@ -317,10 +329,6 @@ namespace p3
 	{
 		{ function(grid_pos<dim>{}) } -> any_type;
 	};
-
-	// now this one is harder, as it also needs to be able to accept another arbitrary type...
-	// generator(pos, val);
-	// concept grid_converter
 
 #pragma endregion
 #pragma region grid
@@ -332,6 +340,7 @@ namespace p3
 	#pragma region types
 
 public:
+	using this_type = grid<data_type, dimensions>;
 	using container_type = std::vector<data_type>;
 	using iterator = typename container_type::iterator;
 	using const_iterator = typename container_type::const_iterator;
@@ -425,6 +434,8 @@ public:
 	#pragma region meta data
 
 	public:
+		[[nodiscard]] VEC_CXP auto operator<=>(const this_type &other) const = default;
+
 		[[nodiscard]] constexpr size_t rank() const
 		{
 			return dimensions;
@@ -473,54 +484,54 @@ public:
 	#pragma region iterators
 
 	public:
-		iterator begin()
+		[[nodiscard]] iterator begin()
 		{
 			return m_data.begin();
 		}
-		const_iterator begin() const
+		[[nodiscard]] const_iterator begin() const
 		{
 			return m_data.begin();
 		}
-		iterator end()
+		[[nodiscard]] iterator end()
 		{
 			return m_data.end();
 		}
-		const_iterator end() const
+		[[nodiscard]] const_iterator end() const
 		{
 			return m_data.end();
 		}
 
-		reverse_iterator rbegin()
+		[[nodiscard]] reverse_iterator rbegin()
 		{
 			return m_data.rbegin();
 		}
-		const_reverse_iterator rbegin() const
+		[[nodiscard]] const_reverse_iterator rbegin() const
 		{
 			return m_data.rbegin();
 		}
-		reverse_iterator rend()
+		[[nodiscard]] reverse_iterator rend()
 		{
 			return m_data.rend();
 		}
-		const_reverse_iterator rend() const
+		[[nodiscard]] const_reverse_iterator rend() const
 		{
 			return m_data.rend();
 		}
 
-		const_iterator cbegin() const
+		[[nodiscard]] const_iterator cbegin() const
 		{
 			return m_data.cbegin();
 		}
-		const_iterator cend() const
+		[[nodiscard]] const_iterator cend() const
 		{
 			return m_data.cend();
 		}
 
-		const_iterator crbegin() const
+		[[nodiscard]] const_iterator crbegin() const
 		{
 			return m_data.crbegin();
 		}
-		const_iterator crend() const
+		[[nodiscard]] const_iterator crend() const
 		{
 			return m_data.crend();
 		}
@@ -529,11 +540,9 @@ public:
 	#pragma region partitons (subgrid, slice)
 
 		// subgrid (single layer), slice (vector of layers)
+		// in both cases we may choose the axis perpendicular to the cut (axis of constant coordinates)
 
 	#pragma endregion
-
-		// kernel shennanigans?
-
 	#pragma region member variables
 
 	private:

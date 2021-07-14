@@ -145,7 +145,7 @@ namespace unit_test
 		std::cout << "Final unit test summary:" << std::endl;
 
 		const double percentage = 100.0 * successful / total;
-		std::cout << std::format(" -> Successful tests: {2}% ({0}/{1})", successful, total, percentage) << std::endl;
+		std::cout << std::format(" -> Successful tests: {2:.2f}% ({0}/{1})", successful, total, percentage) << std::endl;
 
 		const std::string summary = successful == total ? "You may push your code! :)" : "Do not upload this code! :(";
 		const auto color = successful == total ? text::green2 : text::red2;
