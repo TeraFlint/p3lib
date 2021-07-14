@@ -419,16 +419,22 @@ P3_UNIT_TEST(grid_comparison)
 
 	const auto assert_subgrid = [](const auto &expected, const auto &actual, size_t index, size_t axis)
 	{
-		if (expected != actual)
+		const auto name = std::format("grid::subgrid({0}, {1})", index, axis);
+		if (expected.dim() != actual.dim())
 		{
-			unit_test::assert_equals(0, 1, std::format("grid::subgrid({0}, {1}) did not match the prepared subgrid"));
+			unit_test::assert_equals(0, 1, std::format("{0}: resulting grid sizes did not match", name));
+		}
+
+		for (size_t i = 0; i < expected.size(); ++i)
+		{
+			unit_test::assert_equals(expected[i], actual[i], std::format("{0}: value mismatch at grid[{1}]", name, i));
 		}
 	};
 	const auto assert_axis = [&](const auto &vec, size_t axis)
 	{
 		for (size_t index = 0; index < vec.size(); ++index)
 		{
-			// assert_subgrid(vec[index], grid.subgrid(index, axis), index, axis);
+			assert_subgrid(vec[index], grid.subgrid(index, axis), index, axis);
 		}
 	};
 

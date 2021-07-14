@@ -237,29 +237,33 @@ namespace p3
 			return in_bounds;
 		}
 
-		constexpr bool next()
+		constexpr bool next(size_t axis = 0)
 		{
 			const auto can_terminate = [](const auto &dim, auto &pos) { return pos + 1 < dim; };
 			const auto operation     = [](const auto &dim, auto &pos) { ++pos; };
 			const auto reset         = [](const auto &dim, auto &pos) { pos = 0; };
-			return iterate_backwards_until(can_terminate, operation, reset);
+			return iterate_backwards_until(can_terminate, operation, reset, axis);
 		}
 
-		constexpr bool prev()
+		constexpr bool prev(size_t axis = 0)
 		{
 			const auto can_terminate = [](const auto &dim, auto &pos) { return pos > 0; };
 			const auto operation     = [](const auto &dim, auto &pos) { --pos; };
 			const auto reset         = [](const auto &dim, auto &pos) { pos = dim - 1; };
-			return iterate_backwards_until(can_terminate, operation, reset);
+			return iterate_backwards_until(can_terminate, operation, reset, axis);
 		}
 
 	private:
 		template <typename check_type, typename operation_type, typename reset_type>
-		constexpr bool iterate_backwards_until(const check_type &can_terminate, const operation_type &operation, const reset_type &reset)
+		constexpr bool iterate_backwards_until(const check_type &can_terminate, const operation_type &operation, const reset_type &reset, const size_t axis)
 		{
 			auto dim_iter = m_dim.crbegin();
 			auto pos_iter = m_pos.rbegin();
-			for (size_t i = 0; i < dimensions; ++i, ++dim_iter, ++pos_iter)
+
+			std::advance(dim_iter, axis);
+			std::advance(pos_iter, axis);
+
+			for (size_t i = 0; i < dimensions - axis; ++i, ++dim_iter, ++pos_iter)
 			{
 				// do the operation if you can and report success
 				if (can_terminate(*dim_iter, *pos_iter))
@@ -473,6 +477,16 @@ public:
 			return m_data.size();
 		}
 
+		[[nodiscard]] constexpr size_t index_of(const grid_size<dimensions> &pos) const
+		{
+			return m_dim.index_of(pos);
+		}
+
+		[[nodiscard]] constexpr grid_size<dimensions> position_of(size_t index) const
+		{
+			return grid_size<dimensions>::from_index(index, m_dim);
+		}
+
 	#pragma endregion
 	#pragma region accessors
 
@@ -567,9 +581,23 @@ public:
 	public:
 		// in both cases we may choose the axis perpendicular to the cut (axis of constant coordinates)
 
-		// VEC_CXP grid<data_type, dimensions - 1> subgrid(size_t subgrid_index, size_t axis = 0) const;
+		VEC_CXP grid<data_type, dimensions - 1U> subgrid(size_t layer, size_t axis = 0) const
+		{
+			// todo
+			return {};
+		}
 
-		// VEC_CXP std::vector<grid<data_type, dimensions - 1>> slice(size_t axis = 0) const;
+		VEC_CXP std::vector<grid<data_type, dimensions - 1U>> slice(size_t axis = 0) const
+		{
+			// todo: write subgrid and find a good abstraction which we can use to either fill one subgrid or a whole sliced grid simultaneously and efficiently.
+			std::vector<grid<data_type, dimensions - 1U>> result;
+			result.reserve(m_dim[axis]);
+			for (size_t layer = 0; layer < m_dim[axis]; ++layer)
+			{
+				result.push_back(subgrid(layer, axis));
+			}
+			return result;
+		}
 
 	private:
 		// VEC_EXP void populate_subgrid() const;
