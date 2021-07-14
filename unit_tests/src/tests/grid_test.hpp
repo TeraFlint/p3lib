@@ -54,6 +54,33 @@ P3_UNIT_TEST(grid_size_fitting)
 	static_assert(2 == size.fit_to_data(6)[0]);
 }
 
+P3_UNIT_TEST(grid_size_remove_axis)
+{
+	constexpr p3::grid_size<10> size{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	constexpr p3::grid_size<9> rem_0{    1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	constexpr p3::grid_size<9> rem_1{ 0,    2, 3, 4, 5, 6, 7, 8, 9 };
+	constexpr p3::grid_size<9> rem_2{ 0, 1,    3, 4, 5, 6, 7, 8, 9 };
+	constexpr p3::grid_size<9> rem_3{ 0, 1, 2,    4, 5, 6, 7, 8, 9 };
+	constexpr p3::grid_size<9> rem_4{ 0, 1, 2, 3,    5, 6, 7, 8, 9 };
+	constexpr p3::grid_size<9> rem_5{ 0, 1, 2, 3, 4,    6, 7, 8, 9 };
+	constexpr p3::grid_size<9> rem_6{ 0, 1, 2, 3, 4, 5,    7, 8, 9 };
+	constexpr p3::grid_size<9> rem_7{ 0, 1, 2, 3, 4, 5, 6,    8, 9 };
+	constexpr p3::grid_size<9> rem_8{ 0, 1, 2, 3, 4, 5, 6, 7,    9 };
+	constexpr p3::grid_size<9> rem_9{ 0, 1, 2, 3, 4, 5, 6, 7, 8    };
+
+
+	static_assert(rem_0 == size.remove_axis(0), "grid_size::remove_axis(0) did not produce the desired result");
+	static_assert(rem_1 == size.remove_axis(1), "grid_size::remove_axis(1) did not produce the desired result");
+	static_assert(rem_2 == size.remove_axis(2), "grid_size::remove_axis(2) did not produce the desired result");
+	static_assert(rem_3 == size.remove_axis(3), "grid_size::remove_axis(3) did not produce the desired result");
+	static_assert(rem_4 == size.remove_axis(4), "grid_size::remove_axis(4) did not produce the desired result");
+	static_assert(rem_5 == size.remove_axis(5), "grid_size::remove_axis(5) did not produce the desired result");
+	static_assert(rem_6 == size.remove_axis(6), "grid_size::remove_axis(6) did not produce the desired result");
+	static_assert(rem_7 == size.remove_axis(7), "grid_size::remove_axis(7) did not produce the desired result");
+	static_assert(rem_8 == size.remove_axis(8), "grid_size::remove_axis(8) did not produce the desired result");
+	static_assert(rem_9 == size.remove_axis(9), "grid_size::remove_axis(9) did not produce the desired result");
+}
+
 #pragma endregion
 #pragma region grid_pos
 
@@ -422,7 +449,7 @@ P3_UNIT_TEST(grid_comparison)
 		const auto name = std::format("grid::subgrid({0}, {1})", index, axis);
 		if (expected.dim() != actual.dim())
 		{
-			unit_test::assert_equals(0, 1, std::format("{0}: resulting grid sizes did not match", name));
+			unit_test::assert_equals(0, 1, std::format("{0}: grid size mismatch", name));
 		}
 
 		for (size_t i = 0; i < expected.size(); ++i)

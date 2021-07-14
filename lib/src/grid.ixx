@@ -132,6 +132,27 @@ namespace p3
 			}
 			return result;
 		}
+
+		[[nodiscard]] constexpr grid_size<dimensions - 1> remove_axis(size_t axis) const
+			requires(dimensions > 0)
+		{
+			grid_size<dimensions - 1> result;
+			auto source = this->begin();
+			auto destination = result.begin();
+
+			const auto copy_n = [&](size_t n) 
+			{
+				for (size_t i = 0; i < n; ++i, ++destination, ++source)
+				{
+					*destination = *source;
+				}
+			};
+
+			copy_n(axis);
+			++source;
+			copy_n(dimensions - axis - 1);
+			return result;
+		}
 	};
 
 #pragma endregion
@@ -582,12 +603,16 @@ public:
 		// in both cases we may choose the axis perpendicular to the cut (axis of constant coordinates)
 
 		VEC_CXP grid<data_type, dimensions - 1U> subgrid(size_t layer, size_t axis = 0) const
+			requires(dimensions > 0)
 		{
+			const auto new_size = m_dim.remove_axis(axis);
+
 			// todo
 			return {};
 		}
 
 		VEC_CXP std::vector<grid<data_type, dimensions - 1U>> slice(size_t axis = 0) const
+			requires(dimensions > 0)
 		{
 			// todo: write subgrid and find a good abstraction which we can use to either fill one subgrid or a whole sliced grid simultaneously and efficiently.
 			std::vector<grid<data_type, dimensions - 1U>> result;
