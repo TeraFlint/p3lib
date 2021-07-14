@@ -165,7 +165,7 @@ P3_UNIT_TEST(grid_constructor_size)
 
 P3_UNIT_TEST(grid_constructor_size_complete_list)
 {
-	const p3::grid<unsigned, 2> grid{{3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9}};
+	const p3::grid<unsigned, 2> grid{ {3, 3}, {1, 2, 3, 4, 5, 6, 7, 8, 9} };
 	
 	size_t index = 1;
 	for (size_t y = 0; y < grid.dim_at(1); ++y)
@@ -216,6 +216,32 @@ P3_UNIT_TEST(grid_constructor_generator)
 		}
 	}
 }
+
+P3_UNIT_TEST(grid_constructor_converter)
+{
+	constexpr p3::grid_size<3> size{ 3, 4, 5 };
+	constexpr auto elements = size.elements();
+	const auto generator = [](const p3::grid_pos<3> &pos) { return pos.pos_at(0) * pos.pos_at(1) + pos.pos_at(2); };
+	const auto converter = [](const p3::grid_pos<3> &pos, const auto &old) { return old - 10; };
+
+	const p3::grid<int, 3> generated{ size, generator };
+	const p3::grid<float, 3> copy = generated;
+	const p3::grid<int, 3> converted{ generated, converter };
+
+	for (size_t i = 0; i < converted.rank(); ++i)
+	{
+		unit_test::assert_equals<size_t>(size[i], converted.dim_at(i));
+	}
+
+	// still no iterators implemented, sorry...
+	for (size_t i = 0; i < elements; ++i)
+	{
+		const auto expected = generated[i] - 10;
+		const auto actual = converted[i];
+		unit_test::assert_equals<int>(expected, actual, std::format("grid::operator[]({0})", i));
+	}
+}
+
 
 P3_UNIT_TEST(grid_value_assignment)
 {

@@ -313,10 +313,14 @@ namespace p3
 	// So void functions would make sense, but I'd like to stay compatible to other functions, as well.
 	export
 	template <typename function_type, size_t dim>
-	concept grid_modifier = requires(function_type function)
+	concept grid_generator = requires(function_type function)
 	{
 		{ function(grid_pos<dim>{}) } -> any_type;
 	};
+
+	// now this one is harder, as it also needs to be able to accept another arbitrary type...
+	// generator(pos, val);
+	// concept grid_converter
 
 #pragma endregion
 #pragma region grid
@@ -325,10 +329,20 @@ namespace p3
 	template <typename data_type, size_t dimensions>
 	class grid
 	{
-#pragma region constructors
+	#pragma region types
+
+public:
+	using container_type = std::vector<data_type>;
+	using iterator = typename container_type::iterator;
+	using const_iterator = typename container_type::const_iterator;
+	using reverse_iterator = typename container_type::reverse_iterator;
+	using const_reverse_iterator = typename container_type::const_reverse_iterator;
+
+	#pragma endregion
+	#pragma region constructors
 
 	public:
-		// default
+		// default constructor
 		VEC_CXP grid() = default;
 
 		// implicit nested list constructor
@@ -357,7 +371,7 @@ namespace p3
 		}
 
 		// size + generator constructor
-		template <grid_modifier<dimensions> generator_type>
+		template <grid_generator<dimensions> generator_type>
 		explicit VEC_CXP grid(const grid_size<dimensions> &size, const generator_type &generator)
 			: m_dim{ size }
 		{
@@ -372,8 +386,29 @@ namespace p3
 		}
 
 		// grid + converter constructor
-		// template <typename compatible_type, grid_modifier<dimensions> converter_type>
-		// explicit grid(const grid<compatible_type, dimensions> &other, const converter_type &converter);
+		template <typename compatible_type, typename converter_type>
+		explicit VEC_CXP grid(const grid<compatible_type, dimensions> &other, const converter_type &converter)
+			: m_dim{ other.dim() }
+		{
+			const auto fill = [&]()
+			{
+				grid_pos<dimensions> pos{ m_dim };
+				for (const auto &val : other)
+				{
+					m_data.push_back(converter(pos, val));
+					++pos;
+				}
+			};
+			reserve_fill_resize(fill);
+		}
+
+		// implicit conversion constructor
+		template <typename compatible_type>
+		VEC_CXP grid(const grid<compatible_type, dimensions> &other) 
+			requires(std::is_convertible_v<compatible_type, data_type>)
+			: grid(other, [](auto pos, auto val) { return val; })
+		{
+		}
 
 	private:
 		template <typename function_type>
@@ -411,7 +446,7 @@ namespace p3
 		}
 
 	#pragma endregion
-	#pragma region accessors and iterators
+	#pragma region accessors
 
 	public:
 		[[nodiscard]] VEC_CXP data_type &operator[](size_t index)
@@ -434,8 +469,61 @@ namespace p3
 			return m_data[m_dim.index_of(pos)];
 		}
 
+	#pragma endregion
+	#pragma region iterators
 
-		// iterators
+	public:
+		iterator begin()
+		{
+			return m_data.begin();
+		}
+		const_iterator begin() const
+		{
+			return m_data.begin();
+		}
+		iterator end()
+		{
+			return m_data.end();
+		}
+		const_iterator end() const
+		{
+			return m_data.end();
+		}
+
+		reverse_iterator rbegin()
+		{
+			return m_data.rbegin();
+		}
+		const_reverse_iterator rbegin() const
+		{
+			return m_data.rbegin();
+		}
+		reverse_iterator rend()
+		{
+			return m_data.rend();
+		}
+		const_reverse_iterator rend() const
+		{
+			return m_data.rend();
+		}
+
+		const_iterator cbegin() const
+		{
+			return m_data.cbegin();
+		}
+		const_iterator cend() const
+		{
+			return m_data.cend();
+		}
+
+		const_iterator crbegin() const
+		{
+			return m_data.crbegin();
+		}
+		const_iterator crend() const
+		{
+			return m_data.crend();
+		}
 
 	#pragma endregion
 	#pragma region partitons (subgrid, slice)
@@ -450,7 +538,7 @@ namespace p3
 
 	private:
 		grid_size<dimensions> m_dim;
-		std::vector<data_type> m_data;
+		container_type m_data;
 
 	#pragma endregion
 	};
