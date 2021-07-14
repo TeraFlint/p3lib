@@ -272,4 +272,39 @@ P3_UNIT_TEST(grid_value_assignment)
 	}
 }
 
+P3_UNIT_TEST(grid_iterators)
+{
+	constexpr p3::grid_size<2> size{ 16, 16 };
+	const p3::grid<int, 2> grid{ size, [](const auto &pos) { return pos.pos_at(0) ^ pos.pos_at(1); } };
+
+	size_t counter = 0;
+	for (const auto &elem : grid)
+	{
+		++counter;
+	}
+	unit_test::assert_equals<size_t>(size.elements(), counter, "grid: iteration count");
+
+	auto copy = grid;
+	auto grid_iter = grid.begin();
+	auto copy_iter = copy.begin();
+	
+	for (; grid_iter != grid.end() && copy_iter != copy.end(); ++grid_iter, ++copy_iter)
+	{
+		unit_test::assert_equals<int>(*grid_iter, *copy_iter, "grid: dual iteration element comparison");
+	}
+	if (grid_iter != grid.end() || copy_iter != copy.end())
+	{
+		unit_test::assert_equals(1, 0, "grid: iterator count didn't match");
+	}
+
+	for (auto &elem : copy)
+	{
+		elem = 0;
+	}
+	for (const auto &elem : copy)
+	{
+		unit_test::assert_equals<int>(0, elem, "grid: iterator writing didn't work");
+	}
+}
+
 #pragma endregion
