@@ -379,6 +379,23 @@ public:
 			reserve_fill_resize(fill);
 		}
 
+		// size + iterator pair constructor
+		template <typename begin_type, typename end_type>
+		explicit VEC_CXP grid(const grid_size<dimensions> &size, const begin_type &begin, const end_type &end)
+			: m_dim{ size.fit_to_data(std::distance(begin, end)) }
+		{
+			const auto fill = [&]() 
+			{
+				// todo: import <algorithm>;
+				// std::copy(begin, end, std::back_inserter(m_data));
+				for (auto iter = begin; iter != end; ++iter)
+				{
+					m_data.push_back(*iter);
+				}
+			};
+			reserve_fill_resize(fill);
+		}
+
 		// size + generator constructor
 		template <grid_generator<dimensions> generator_type>
 		explicit VEC_CXP grid(const grid_size<dimensions> &size, const generator_type &generator)

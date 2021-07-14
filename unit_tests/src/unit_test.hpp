@@ -203,8 +203,8 @@ namespace unit_test
 		}
 	}
 
-	template <typename iter_type>
-	void assert_equals(const iter_type &expected_begin, const iter_type &expected_end, const iter_type &actual_begin, const iter_type &actual_end, const std::string body = {}, const std::source_location location = std::source_location::current())
+	template <typename iter_type1, typename iter_type2>
+	void assert_equals(const iter_type1 &expected_begin, const iter_type1 &expected_end, const iter_type2 &actual_begin, const iter_type2 &actual_end, const std::string body = {}, const std::source_location location = std::source_location::current())
 	{
 		std::size_t index = 0;
 		auto expected = expected_begin;

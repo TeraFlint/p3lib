@@ -219,6 +219,26 @@ P3_UNIT_TEST(grid_constructor_size_incomplete_list)
 	}
 }
 
+P3_UNIT_TEST(grid_constructor_iterator)
+{
+	const std::string text = "123456789";
+	const p3::grid<char, 2> grid({ 0, 3 }, text.begin(), text.end());
+
+	unit_test::assert_equals<size_t>(3, grid.dim_at(0), "grid: iterator constructor: dimensions did not grow to fit iterator area");
+	unit_test::assert_equals<size_t>(text.size(), grid.size(), "grid: iterator constructor: element count does not match");
+
+	// hmm, doesn't compile for some reason...
+	// unit_test::assert_equals(text.begin(), text.end(), grid.begin(), grid.end(), "grid: iterator constructor did not correctly copy the elements");
+
+	auto text_iter = text.begin();
+	auto grid_iter = grid.begin();
+
+	for (; text_iter != text.end() && grid_iter != grid.end(); ++text_iter, ++grid_iter)
+	{
+		unit_test::assert_equals<char>(*text_iter, *grid_iter, "grid: iterator constructor: data copied incorrectly");
+	}
+}
+
 P3_UNIT_TEST(grid_constructor_generator)
 {
 	const auto operation = [](auto a, auto b) { return 2 * a + b; };
