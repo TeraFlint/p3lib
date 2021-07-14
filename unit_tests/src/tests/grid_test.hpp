@@ -394,19 +394,47 @@ P3_UNIT_TEST(grid_comparison)
 
 /*P3_UNIT_TEST(grid_subgrid)
 {
-	const auto increment_from = [](auto start)
+	const p3::grid<int, 3> grid({ 3, 4, 5 }, [](const auto &pos) { return pos.index(); });  //  0  1  2 ... 57 58 59
+	const std::vector<p3::grid<int, 2>> axis_z // 3 possible subgrids in the first axis
 	{
-		return [=](const auto &pos)
-		{
-			return pos.index() + start;
-		};
+		p3::grid<int, 2>({ 4, 5 }, {  0,  1,  2,  3,  4,    5,  6,  7,  8,  9,   10, 11, 12, 13, 14,   15, 16, 17, 18, 19 }),
+		p3::grid<int, 2>({ 4, 5 }, { 20, 21, 22, 23, 24,   25, 26, 27, 28, 29,   30, 31, 32, 33, 34,   35, 36, 37, 38, 39 }),
+		p3::grid<int, 2>({ 4, 5 }, { 40, 41, 42, 43, 44,   45, 46, 47, 48, 49,   50, 51, 52, 53, 54,   55, 56, 57, 58, 59 })
+	};
+	const std::vector<p3::grid<int, 2>> axis_y // 4 possible subgrids in the second axis
+	{
+		p3::grid<int, 2>({ 3, 5 }, {  0,  1,  2,  3,  4,   20, 21, 22, 23, 24,   40, 41, 42, 43, 44 }),
+		p3::grid<int, 2>({ 3, 5 }, {  5,  6,  7,  8,  9,   25, 26, 27, 28, 29,   45, 46, 47, 48, 49 }),
+		p3::grid<int, 2>({ 3, 5 }, { 10, 11, 12, 13, 14,   30, 31, 32, 33, 34,   50, 51, 52, 53, 54 }),
+		p3::grid<int, 2>({ 3, 5 }, { 15, 16, 17, 18, 19,   35, 36, 37, 38, 39,   55, 56, 57, 58, 59 })
+	};
+	const std::vector<p3::grid<int, 2>> axis_x // 5 possible subgrids in the third axis
+	{
+		p3::grid<int, 2>({ 3, 4 }, { 0, 5, 10, 15,   20, 25, 30, 35,   40, 45, 50, 55 }),
+		p3::grid<int, 2>({ 3, 4 }, { 1, 6, 11, 16,   21, 26, 31, 36,   41, 46, 51, 56 }),
+		p3::grid<int, 2>({ 3, 4 }, { 2, 7, 12, 17,   22, 27, 32, 37,   42, 47, 52, 57 }),
+		p3::grid<int, 2>({ 3, 4 }, { 3, 8, 13, 18,   23, 28, 33, 28,   43, 48, 53, 58 }),
+		p3::grid<int, 2>({ 3, 4 }, { 4, 9, 14, 19,   24, 29, 34, 39,   44, 49, 54, 59 })
 	};
 
-	const p3::grid<int, 3> grid({ 3, 4, 5 }, increment_from(0));
-	const p3::grid<int, 2> sub_0_0({ 4, 5 }, increment_from(0));
-	const p3::grid<int, 2> sub_0_1({ 4, 5 }, increment_from(20));
-	const p3::grid<int, 2> sub_0_2({ 4, 5 }, increment_from(40));
+	const auto assert_subgrid = [](const auto &expected, const auto &actual, size_t index, size_t axis)
+	{
+		if (expected != actual)
+		{
+			unit_test::assert_equals(0, 1, std::format("grid::subgrid({0}, {1}) did not match the prepared subgrid"));
+		}
+	};
+	const auto assert_axis = [&](const auto &vec, size_t axis)
+	{
+		for (size_t index = 0; index < vec.size(); ++index)
+		{
+			// assert_subgrid(vec[index], grid.subgrid(index, axis), index, axis);
+		}
+	};
 
+	assert_axis(axis_z, 0);
+	assert_axis(axis_y, 1);
+	assert_axis(axis_x, 2);
 }*/
 
 /*P3_UNIT_TEST(grid_slice)
