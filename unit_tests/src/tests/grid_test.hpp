@@ -419,6 +419,27 @@ P3_UNIT_TEST(grid_comparison)
 	}
 }
 
+P3_UNIT_TEST(grid_iterate)
+{
+	size_t iterations = 0;
+	const auto  count_iterations = [&](const auto &pos, const auto &val) { ++iterations; };
+	const auto generate_ascending = [](const auto &pos) { return pos.index(); };
+	const auto   assert_ascending = [](const auto &pos, const auto &val) { unit_test::assert_equals<int>(pos.index(), val, "grid::iterate(): values mismatch"); };
+	const auto   overwrite_zeroes = [](const auto &pos, auto &val) { val = 0; };
+	const auto      assert_zeroes = [](const auto &pos, const auto &val) { unit_test::assert_equals<int>(0, val, "grid::iterate(): value is not zero."); };
+
+	const p3::grid<int, 4> grid_const({ 3, 3, 3, 3 }, generate_ascending);
+	grid_const.iterate(assert_ascending);
+	grid_const.iterate(count_iterations);
+	unit_test::assert_equals<size_t>(grid_const.size(), iterations, "grid::iterate(): iteration count mismatch");
+	// grid_const.iterate(overwrite_zeroes); // <- should not compile, as it's attempting to modify a const object.
+
+	p3::grid<int, 4> grid_mutable = grid_const;
+	grid_mutable.iterate(assert_ascending);
+	grid_mutable.iterate(overwrite_zeroes);
+	grid_mutable.iterate(assert_zeroes);
+}
+
 /*P3_UNIT_TEST(grid_subgrid)
 {
 	const p3::grid<int, 3> grid({ 3, 4, 5 }, [](const auto &pos) { return pos.index(); });  //  0  1  2 ... 57 58 59

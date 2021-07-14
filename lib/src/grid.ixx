@@ -595,6 +595,31 @@ public:
 	#pragma region manipulators
 
 	public:
+
+		// read-write iteration (with position information)
+		template <typename function_type>
+		VEC_CXP void iterate(const function_type &function)
+		{
+			grid_pos<dimensions> pos{ m_dim };
+			for (auto &item : m_data)
+			{
+				function(pos, item);
+				++pos;
+			}
+		}
+
+		// read-only iteration (with position information)
+		template <typename function_type>
+		VEC_CXP void iterate(const function_type &function) const
+		{
+			grid_pos<dimensions> pos{ m_dim };
+			for (const auto &item : m_data)
+			{
+				function(pos, item);
+				++pos;
+			}
+		}
+
 		// preserves the positions of elements in the grid. cut-off elements due to axis shrinkage will be lost.
 
 		// void resize(const grid_size<dimensions> &size);
