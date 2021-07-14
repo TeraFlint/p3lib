@@ -333,14 +333,42 @@ P3_UNIT_TEST(grid_iterators)
 
 P3_UNIT_TEST(grid_comparison)
 {
-	p3::grid<int, 3> default1, default2;
-	if (default1 != default2)
+	const p3::grid<int, 3> def1, def2;
+	if (def1 != def1)
 	{
-		unit_test::assert_equals(0, 1, "grid: default constructed elements did not achieve equality");
+		unit_test::assert_equals(0, 1, "grid: default object did not equal itself");
+	}
+	if (def1 != def2)
+	{
+		unit_test::assert_equals(0, 1, "grid: default objects did not achieve equality");
 	}
 
-	// ...
+	// hm, this begs for a grid(size, begin, end) constructor. I'll think about it.
+	const p3::grid<char, 2> equ1{ {2, 6}, {'H', 'e', 'l', 'l', 'o', ',', 'W', 'o', 'r', 'l', 'd', '!'} };
+	const p3::grid<char, 2> equ2{ {2, 6}, {'H', 'e', 'l', 'l', 'o', ',', 'W', 'o', 'r', 'l', 'd', '!'} };
 
+	// one entry changed
+	const p3::grid<char, 2> neq1{ {2, 6}, {'H', 'e', 'l', 'l', 'o', ',', 'W', 'a', 'r', 'l', 'd', '!'} };
+	// flipped dimensions
+	const p3::grid<char, 2> neq2{ {6, 2}, {'H', 'e', 'l', 'l', 'o', ',', 'W', 'o', 'r', 'l', 'd', '!'} };
+
+	if (equ1 != equ1)
+	{
+		unit_test::assert_equals(0, 1, "grid: filled grid did not equal itself");
+	}
+	if (equ1 != equ2)
+	{
+		unit_test::assert_equals(0, 1, "grid: equally filled grids did not achieve equality");
+	}
+
+	if (equ1 == neq1)
+	{
+		unit_test::assert_equals(0, 1, "grid: non-equal filled grids achieved equality");
+	}
+	if (equ1 == neq1)
+	{
+		unit_test::assert_equals(0, 1, "grid: filled grids with flipped dimensions achieved equality");
+	}
 }
 
 #pragma endregion

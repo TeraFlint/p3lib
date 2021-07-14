@@ -546,7 +546,7 @@ public:
 	#pragma region member variables
 
 	private:
-		grid_size<dimensions> m_dim;
+		grid_size<dimensions> m_dim{};
 		container_type m_data;
 
 	#pragma endregion
