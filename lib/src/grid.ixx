@@ -78,10 +78,13 @@ namespace p3
 			}
 		}
 
-		[[nodiscard]] constexpr size_t elements() const
+		[[nodiscard]] constexpr size_t elements(size_t most_significant_axis = 0) const
 		{
+			// todo: iterate backwards and stop after the most significant axis.
+			// this should allow us to also calculate contiguous layer sizes.
+
 			// todo: import <numeric>; import <functional>;
-			// return std::accumulate(this->begin(), this->end(), 1, std::multiplies{});
+			// return std::accumulate(this->rbegin(), this->rend(), 1, std::multiplies{});
 			size_t result = 1;
 			for (const auto &item : *this)
 			{
@@ -602,16 +605,22 @@ public:
 	public:
 		// in both cases we may choose the axis perpendicular to the cut (axis of constant coordinates)
 
-		VEC_CXP grid<data_type, dimensions - 1U> subgrid(size_t layer, size_t axis = 0) const
+		VEC_CXP grid<data_type, dimensions - 1> subgrid(size_t layer, size_t axis = 0) const
 			requires(dimensions > 0)
 		{
 			const auto new_size = m_dim.remove_axis(axis);
+			grid<data_type, dimensions - 1> result(new_size);
 
-			// todo
-			return {};
+			// start = axis * (product of all axes after the stolen axis)
+
+
+			// if our axis is lower than the stolen axis, we just keep going, incrementing by one.
+			// if it's above, we increment by the size of the stolen axis.
+
+			return result;
 		}
 
-		VEC_CXP std::vector<grid<data_type, dimensions - 1U>> slice(size_t axis = 0) const
+		VEC_CXP std::vector<grid<data_type, dimensions - 1>> slice(size_t axis = 0) const
 			requires(dimensions > 0)
 		{
 			// todo: write subgrid and find a good abstraction which we can use to either fill one subgrid or a whole sliced grid simultaneously and efficiently.

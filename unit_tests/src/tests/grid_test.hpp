@@ -49,9 +49,9 @@ P3_UNIT_TEST(grid_size_fitting)
 	constexpr p3::grid_size<2> size{ 1, 5 };
 	constexpr auto elements = size.elements();
 
-	static_assert(1 == size.fit_to_data(4)[0]);
-	static_assert(1 == size.fit_to_data(5)[0]);
-	static_assert(2 == size.fit_to_data(6)[0]);
+	static_assert(1 == size.fit_to_data(4)[0], "grid_size::fit_to_data(4) did not reach the expected amount of rows");
+	static_assert(1 == size.fit_to_data(5)[0], "grid_size::fit_to_data(5) did not reach the expected amount of rows");
+	static_assert(2 == size.fit_to_data(6)[0], "grid_size::fit_to_data(6) did not reach the expected amount of rows");
 }
 
 P3_UNIT_TEST(grid_size_remove_axis)
@@ -440,9 +440,78 @@ P3_UNIT_TEST(grid_comparison)
 		p3::grid<int, 2>({ 3, 4 }, { 0, 5, 10, 15,   20, 25, 30, 35,   40, 45, 50, 55 }),
 		p3::grid<int, 2>({ 3, 4 }, { 1, 6, 11, 16,   21, 26, 31, 36,   41, 46, 51, 56 }),
 		p3::grid<int, 2>({ 3, 4 }, { 2, 7, 12, 17,   22, 27, 32, 37,   42, 47, 52, 57 }),
-		p3::grid<int, 2>({ 3, 4 }, { 3, 8, 13, 18,   23, 28, 33, 28,   43, 48, 53, 58 }),
+		p3::grid<int, 2>({ 3, 4 }, { 3, 8, 13, 18,   23, 28, 33, 38,   43, 48, 53, 58 }),
 		p3::grid<int, 2>({ 3, 4 }, { 4, 9, 14, 19,   24, 29, 34, 39,   44, 49, 54, 59 })
 	};
+
+	const auto iterate_with_delimiter = [](auto begin, auto end, auto step, auto between)
+	{
+		bool first = true;
+		for (auto here = begin; here != end; ++here)
+		{
+			if (!first)
+			{
+				between();
+			}
+			step(*here, first);
+			first = false;
+		}
+	};
+
+	const auto print_differences = [&](const auto &vec, size_t axis) 
+	{
+		const auto reduced_size = grid.dim().remove_axis(axis);
+		std::cout << std::format("size: {{ {0}, {1}, {2} }} -> {{ {3}, {4} }}", grid.dim_at(0), grid.dim_at(1), grid.dim_at(2), reduced_size[0], reduced_size[1]);
+		size_t layer = 0;
+		for (const auto &item : vec)
+		{
+			std::cout << std::endl << " -> layer " << layer++ << ": diff = {";
+			int prev = 0;
+			iterate_with_delimiter(item.begin(), item.end(), 
+				[&](auto entry, bool first)
+				{
+					const auto diff = entry - prev;
+					prev = entry;
+					std::cout << ' ' << diff;
+				}, 
+				[]() { std::cout << ','; }
+			);
+			std::cout << " }";
+		}
+		std::cout << std::endl << std::endl;
+	};
+
+	print_differences(axis_z, 0);
+	print_differences(axis_y, 1);
+	print_differences(axis_x, 2);
+
+	// differences between adjacent position indices. time to find some patterns and apply them.
+
+	// z axis: size { 3, 4, 5 } -> { *, 4, 5 } -> { 4, 5 }
+	//  -> layer 0: diff = {  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1 }
+	//  -> layer 1: diff = { 20,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1 }
+	//  -> layer 2: diff = { 40,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1 }
+	
+	// y axis: size { 3, 4, 5 } -> { 3, *, 5 } -> { 3, 5 }
+	//  -> layer 0: diff = {  0,  1,  1,  1,  1, 16,  1,  1,  1,  1, 16,  1,  1,  1,  1 }
+	//  -> layer 1: diff = {  5,  1,  1,  1,  1, 16,  1,  1,  1,  1, 16,  1,  1,  1,  1 }
+	//  -> layer 2: diff = { 10,  1,  1,  1,  1, 16,  1,  1,  1,  1, 16,  1,  1,  1,  1 }
+	//  -> layer 3: diff = { 15,  1,  1,  1,  1, 16,  1,  1,  1,  1, 16,  1,  1,  1,  1 }
+	
+	// x axis: size { 3, 4, 5 } -> { 3, 4, * } -> { 3, 4 }
+	//  -> layer 0: diff = {  0,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
+	//  -> layer 1: diff = {  1,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
+	//  -> layer 2: diff = {  2,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
+	//  -> layer 3: diff = {  3,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
+	//  -> layer 4: diff = {  4,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
+	
+	// what I can gather from this:
+	// l := length of the stolen axis
+	// p := product of all dimensions "after" the stolen axis (automatically 1, if the last axis is stolen)
+	// start = layer_index * p
+	// every step, increment source iterator by 1.
+	// every p steps, increment by (???)
+
 
 	const auto assert_subgrid = [](const auto &expected, const auto &actual, size_t index, size_t axis)
 	{
