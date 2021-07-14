@@ -394,12 +394,40 @@ P3_UNIT_TEST(grid_comparison)
 
 /*P3_UNIT_TEST(grid_subgrid)
 {
+	const auto increment_from = [](auto start)
+	{
+		return [=](const auto &pos)
+		{
+			return pos.index() + start;
+		};
+	};
 
-}
+	const p3::grid<int, 3> grid({ 3, 4, 5 }, increment_from(0));
+	const p3::grid<int, 2> sub_0_0({ 4, 5 }, increment_from(0));
+	const p3::grid<int, 2> sub_0_1({ 4, 5 }, increment_from(20));
+	const p3::grid<int, 2> sub_0_2({ 4, 5 }, increment_from(40));
 
-P3_UNIT_TEST(grid_slice)
+}*/
+
+/*P3_UNIT_TEST(grid_slice)
 {
+	const p3::grid<int, 3> grid({ 3, 4, 5 }, [&](const auto &pos) { return pos.index(); });
 
+	// slice through every axis and compare each slice with a subgrid.
+	for (size_t axis = 0; axis < grid.rank(); ++axis)
+	{
+		const auto slices = grid.slice(axis);
+		for (size_t layer = 0; layer < slices.size(); ++layer)
+		{
+			const auto &slice = slices[layer];
+			const auto subgrid = grid.subgrid(layer, axis);
+
+			if (slice != subgrid)
+			{
+				unit_test::assert_equals(0, 1, std::format("grid::subgrid({0}, {1}) did not equal grid::slice({1})[{0}]", layer, axis));
+			}
+		}
+	}
 }*/
 
 #pragma endregion
