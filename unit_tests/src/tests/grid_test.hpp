@@ -3,6 +3,72 @@
 
 import p3.grid;
 
+#pragma region helper functions
+
+namespace grid_test
+{
+	template <typename iterator_type, typename step_type, typename between_type>
+	constexpr void iterate_with_delimiter(const iterator_type &begin, const iterator_type &end, const step_type &step, const between_type &between)
+	{
+		bool first = true;
+		for (auto here = begin; here != end; ++here)
+		{
+			if (!first)
+			{
+				between();
+			}
+			step(*here, first);
+			first = false;
+		}
+	}
+
+	template <typename data_type, size_t dimensions>
+	constexpr void assert_subgrid(const p3::grid<data_type, dimensions> &expected, const p3::grid<data_type, dimensions> &actual, size_t index, size_t axis)
+	{
+		const auto name = std::format("grid::subgrid({0}, {1})", index, axis);
+		if (expected.dim() != actual.dim())
+		{
+			unit_test::assert_equals(0, 1, std::format("{0}: grid size mismatch", name));
+		}
+
+		for (size_t i = 0; i < expected.size(); ++i)
+		{
+			unit_test::assert_equals(expected[i], actual[i], std::format("{0}: value mismatch at grid[{1}]", name, i));
+		}
+	}
+
+	template <typename data_type, size_t dimensions>
+	void assert_subgrid_axis(const p3::grid<data_type, dimensions+1> &grid, const std::vector<p3::grid<data_type, dimensions>> &vec, size_t axis)
+	{
+		for (size_t index = 0; index < vec.size(); ++index)
+		{
+			assert_subgrid(vec[index], grid.subgrid(index, axis), index, axis);
+		}
+	}
+
+	template <typename data_type>
+	void subgrid_print_differences(const p3::grid<data_type, 3> &grid, const std::vector<p3::grid<data_type, 2>> &vec, size_t axis)
+	{
+		const auto reduced_size = grid.dim().remove_axis(axis);
+		std::cout << std::format("size: {{ {0}, {1}, {2} }} -> {{ {3}, {4} }}", grid.dim_at(0), grid.dim_at(1), grid.dim_at(2), reduced_size[0], reduced_size[1]);
+		size_t layer = 0;
+		for (const auto &item : vec)
+		{
+			std::cout << std::endl << " -> layer " << layer++ << ": diff = {";
+			int prev = 0;
+			const auto step = [&](auto entry, bool first)
+			{
+				std::cout << ' ' << entry - prev;
+				prev = entry;
+			};
+			grid_test::iterate_with_delimiter(item.begin(), item.end(), step, []() { std::cout << ','; });
+			std::cout << " }";
+		}
+		std::cout << std::endl << std::endl;
+	}
+}
+
+#pragma endregion
 #pragma region nested_list
 
 /*P3_UNIT_TEST(grid_nested_lists)
@@ -440,7 +506,58 @@ P3_UNIT_TEST(grid_iterate)
 	grid_mutable.iterate(assert_zeroes);
 }
 
-/*P3_UNIT_TEST(grid_subgrid)
+/*P3_UNIT_TEST(grid_subgrid_3d_small)
+{
+	const p3::grid<int, 3> grid({ 2, 3, 4 }, [](const auto &pos) { return pos.index(); });  //  0  1  2 ...  9 10 11
+	const std::vector<p3::grid<int, 2>> axis_z // 2 possible subgrids in the first axis
+	{
+		p3::grid<int, 2>({ 3, 4 }, {  0,  1,  2,  3,    4,  5,  6,  7,    8,  9, 10, 11 }),
+		p3::grid<int, 2>({ 3, 4 }, { 12, 13, 14, 15,   16, 17, 18, 19,   20, 21, 22, 23 })
+	};
+	const std::vector<p3::grid<int, 2>> axis_y // 3 possible subgrids in the second axis
+	{
+		p3::grid<int, 2>({ 2, 4 }, { 0, 1,  2,  3,   12, 13, 14, 15 }),
+		p3::grid<int, 2>({ 2, 4 }, { 4, 5,  6,  7,   16, 17, 18, 19 }),
+		p3::grid<int, 2>({ 2, 4 }, { 8, 9, 10, 11,   20, 21, 22, 23 })
+	};
+	const std::vector<p3::grid<int, 2>> axis_x // 4 possible subgrids in the third axis
+	{
+		p3::grid<int, 2>({ 2, 3 }, { 0, 4,  8,   12, 16, 20 }),
+		p3::grid<int, 2>({ 2, 3 }, { 1, 5,  9,   13, 17, 21 }),
+		p3::grid<int, 2>({ 2, 3 }, { 2, 6, 10,   14, 18, 22 }),
+		p3::grid<int, 2>({ 2, 3 }, { 3, 7, 11,   15, 19, 23 })
+	};
+
+
+	// z axis: size { 2, 3, 4 } -> { *, 3, 4 } -> { 3, 4 }
+	//  -> layer 0: diff = {  0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+	//  -> layer 1: diff = { 12, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+	//  -> steps = 12, delta = ?
+
+	// y axis: size { 2, 3, 4 } -> { 2, *, 4 } -> { 2, 4 }
+	//  -> layer 0: diff = { 0, 1, 1, 1, 9, 1, 1, 1 }
+	//  -> layer 1: diff = { 4, 1, 1, 1, 9, 1, 1, 1 }
+	//  -> layer 2: diff = { 8, 1, 1, 1, 9, 1, 1, 1 }
+	//  -> steps = 4, delta = 8 = 2*4
+
+	// x axis: size { 2, 3, 4 } -> { 2, 3, * } -> { 2, 3 }
+	//  -> layer 0: diff = { 0, 4, 4, 4, 4, 4 }
+	//  -> layer 1: diff = { 1, 4, 4, 4, 4, 4 }
+	//  -> layer 2: diff = { 2, 4, 4, 4, 4, 4 }
+	//  -> layer 3: diff = { 3, 4, 4, 4, 4, 4 }
+	//  -> steps = 1, delta = 3
+
+
+	grid_test::subgrid_print_differences(grid, axis_z, 0);
+	grid_test::subgrid_print_differences(grid, axis_y, 1);
+	grid_test::subgrid_print_differences(grid, axis_x, 2);
+
+	grid_test::assert_subgrid_axis(grid, axis_z, 0);
+	grid_test::assert_subgrid_axis(grid, axis_y, 1);
+	grid_test::assert_subgrid_axis(grid, axis_x, 2);
+}
+
+P3_UNIT_TEST(grid_subgrid_3d_large)
 {
 	const p3::grid<int, 3> grid({ 3, 4, 5 }, [](const auto &pos) { return pos.index(); });  //  0  1  2 ... 57 58 59
 	const std::vector<p3::grid<int, 2>> axis_z // 3 possible subgrids in the first axis
@@ -465,67 +582,29 @@ P3_UNIT_TEST(grid_iterate)
 		p3::grid<int, 2>({ 3, 4 }, { 4, 9, 14, 19,   24, 29, 34, 39,   44, 49, 54, 59 })
 	};
 
-	const auto iterate_with_delimiter = [](auto begin, auto end, auto step, auto between)
-	{
-		bool first = true;
-		for (auto here = begin; here != end; ++here)
-		{
-			if (!first)
-			{
-				between();
-			}
-			step(*here, first);
-			first = false;
-		}
-	};
-
-	const auto print_differences = [&](const auto &vec, size_t axis) 
-	{
-		const auto reduced_size = grid.dim().remove_axis(axis);
-		std::cout << std::format("size: {{ {0}, {1}, {2} }} -> {{ {3}, {4} }}", grid.dim_at(0), grid.dim_at(1), grid.dim_at(2), reduced_size[0], reduced_size[1]);
-		size_t layer = 0;
-		for (const auto &item : vec)
-		{
-			std::cout << std::endl << " -> layer " << layer++ << ": diff = {";
-			int prev = 0;
-			iterate_with_delimiter(item.begin(), item.end(), 
-				[&](auto entry, bool first)
-				{
-					const auto diff = entry - prev;
-					prev = entry;
-					std::cout << ' ' << diff;
-				}, 
-				[]() { std::cout << ','; }
-			);
-			std::cout << " }";
-		}
-		std::cout << std::endl << std::endl;
-	};
-
-	print_differences(axis_z, 0);
-	print_differences(axis_y, 1);
-	print_differences(axis_x, 2);
-
 	// differences between adjacent position indices. time to find some patterns and apply them.
 
 	// z axis: size { 3, 4, 5 } -> { *, 4, 5 } -> { 4, 5 }
 	//  -> layer 0: diff = {  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1 }
 	//  -> layer 1: diff = { 20,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1 }
 	//  -> layer 2: diff = { 40,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1 }
-	
+	//  -> steps = 20, delta = ?
+
 	// y axis: size { 3, 4, 5 } -> { 3, *, 5 } -> { 3, 5 }
 	//  -> layer 0: diff = {  0,  1,  1,  1,  1, 16,  1,  1,  1,  1, 16,  1,  1,  1,  1 }
 	//  -> layer 1: diff = {  5,  1,  1,  1,  1, 16,  1,  1,  1,  1, 16,  1,  1,  1,  1 }
 	//  -> layer 2: diff = { 10,  1,  1,  1,  1, 16,  1,  1,  1,  1, 16,  1,  1,  1,  1 }
 	//  -> layer 3: diff = { 15,  1,  1,  1,  1, 16,  1,  1,  1,  1, 16,  1,  1,  1,  1 }
-	
+	//  -> steps = 5, delta = 15 = 3*5
+
 	// x axis: size { 3, 4, 5 } -> { 3, 4, * } -> { 3, 4 }
 	//  -> layer 0: diff = {  0,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
 	//  -> layer 1: diff = {  1,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
 	//  -> layer 2: diff = {  2,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
 	//  -> layer 3: diff = {  3,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
 	//  -> layer 4: diff = {  4,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5 }
-	
+	//  -> steps = 1, delta = 4
+
 	// what I can gather from this:
 	// l := length of the stolen axis
 	// p := product of all dimensions "after" the stolen axis (automatically 1, if the last axis is stolen)
@@ -533,31 +612,18 @@ P3_UNIT_TEST(grid_iterate)
 	// every step, increment source iterator by 1.
 	// every p steps, increment by (???)
 
+	grid_test::subgrid_print_differences(grid, axis_z, 0);
+	grid_test::subgrid_print_differences(grid, axis_y, 1);
+	grid_test::subgrid_print_differences(grid, axis_x, 2);
 
-	const auto assert_subgrid = [](const auto &expected, const auto &actual, size_t index, size_t axis)
-	{
-		const auto name = std::format("grid::subgrid({0}, {1})", index, axis);
-		if (expected.dim() != actual.dim())
-		{
-			unit_test::assert_equals(0, 1, std::format("{0}: grid size mismatch", name));
-		}
+	grid_test::assert_subgrid_axis(grid, axis_z, 0);
+	grid_test::assert_subgrid_axis(grid, axis_y, 1);
+	grid_test::assert_subgrid_axis(grid, axis_x, 2);
+}
 
-		for (size_t i = 0; i < expected.size(); ++i)
-		{
-			unit_test::assert_equals(expected[i], actual[i], std::format("{0}: value mismatch at grid[{1}]", name, i));
-		}
-	};
-	const auto assert_axis = [&](const auto &vec, size_t axis)
-	{
-		for (size_t index = 0; index < vec.size(); ++index)
-		{
-			assert_subgrid(vec[index], grid.subgrid(index, axis), index, axis);
-		}
-	};
+/*P3_UNIT_TEST(grid_subgrid_4d)
+{
 
-	assert_axis(axis_z, 0);
-	assert_axis(axis_y, 1);
-	assert_axis(axis_x, 2);
 }*/
 
 /*P3_UNIT_TEST(grid_slice)
