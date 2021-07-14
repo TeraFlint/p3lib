@@ -554,10 +554,26 @@ public:
 		}
 
 	#pragma endregion
+	#pragma region manipulators
+
+	public:
+		// preserves the positions of elements in the grid. cut-off elements due to axis shrinkage will be lost.
+
+		// void resize(const grid_size<dimensions> &size);
+
+	#pragma endregion
 	#pragma region partitons (subgrid, slice)
 
-		// subgrid (single layer), slice (vector of layers)
+	public:
 		// in both cases we may choose the axis perpendicular to the cut (axis of constant coordinates)
+
+		// VEC_CXP grid<data_type, dimensions - 1> subgrid(size_t subgrid_index, size_t axis = 0) const;
+
+		// VEC_CXP std::vector<grid<data_type, dimensions - 1>> slice(size_t axis = 0) const;
+
+	private:
+		// VEC_EXP void populate_subgrid() const;
+
 
 	#pragma endregion
 	#pragma region member variables

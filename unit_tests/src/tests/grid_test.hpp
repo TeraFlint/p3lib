@@ -363,9 +363,10 @@ P3_UNIT_TEST(grid_comparison)
 		unit_test::assert_equals(0, 1, "grid: default objects did not achieve equality");
 	}
 
+	const std::string text = "Hello,World!";
 	// hm, this begs for a grid(size, begin, end) constructor. I'll think about it.
 	const p3::grid<char, 2> equ1{ {2, 6}, {'H', 'e', 'l', 'l', 'o', ',', 'W', 'o', 'r', 'l', 'd', '!'} };
-	const p3::grid<char, 2> equ2{ {2, 6}, {'H', 'e', 'l', 'l', 'o', ',', 'W', 'o', 'r', 'l', 'd', '!'} };
+	const p3::grid<char, 2> equ2{ {2, 6}, text.begin(), text.end() };
 
 	// one entry changed
 	const p3::grid<char, 2> neq1{ {2, 6}, {'H', 'e', 'l', 'l', 'o', ',', 'W', 'a', 'r', 'l', 'd', '!'} };
@@ -390,5 +391,15 @@ P3_UNIT_TEST(grid_comparison)
 		unit_test::assert_equals(0, 1, "grid: filled grids with flipped dimensions achieved equality");
 	}
 }
+
+/*P3_UNIT_TEST(grid_subgrid)
+{
+
+}
+
+P3_UNIT_TEST(grid_slice)
+{
+
+}*/
 
 #pragma endregion
