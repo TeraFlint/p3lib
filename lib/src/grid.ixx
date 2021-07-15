@@ -631,8 +631,10 @@ public:
 		}
 
 		// preserves the positions of elements in the grid. cut-off elements due to axis shrinkage will be lost.
-
-		// void resize(const grid_size<dimensions> &size);
+		// VEC_CXP void resize(const grid_size<dimensions> &size)
+		// {
+			// todo
+		// }
 
 	#pragma endregion
 	#pragma region partitons (subgrid, slice)
@@ -670,24 +672,54 @@ public:
 			{
 			}
 
+			explicit constexpr subgrid_info(const slice_info &info, size_t layer)
+				requires(dimensions > 0)
+				: slice_info{ info }, offset{ this->calc_offset(layer) }, jump{ this->calc_jump() }
+			{
+			}
+
 			const size_t offset, jump;
 		};
 
 	public:
 		/*
 			cuts one slice/layer out of the grid.
-			the axis is perpendicular to the cut (the slice contains all the values with dim[axis] == layer).
+			the axis is perpendicular to the cut (the slice contains all the values with dim_at(axis) == layer).
 		*/
 		VEC_CXP grid<data_type, dimensions - 1> subgrid(size_t layer, size_t axis = 0) const
 			requires(dimensions > 0)
 		{
 			const subgrid_info info(m_dim, layer, axis);
+			return grid<data_type, dimensions - 1>(info.size, subgrid_generator(info));
+		}
 
-			size_t progress = 0;
-			const data_type *ptr = &m_data[info.offset];
-			const auto generator = [&](const auto &pos) -> data_type
+		/*
+			slices the whole grid into dim_at(axis) layers.
+			the axis is perpendicular to the cut (the slice contains all the values with dim_at(axis) == layer).
+		*/
+		VEC_CXP std::vector<grid<data_type, dimensions - 1>> slice(size_t axis = 0) const
+			requires(dimensions > 0)
+		{
+			std::vector<grid<data_type, dimensions - 1U>> result;
+			result.reserve(m_dim[axis]);
+
+			const slice_info general_info(m_dim, axis);
+			for (size_t layer = 0; layer < m_dim[axis]; ++layer)
 			{
-				const auto result = *ptr;
+				const subgrid_info layer_info(general_info, layer);
+				result.emplace_back(layer_info.size, subgrid_generator(layer_info));
+			}
+			return result;
+		}
+
+	private:
+		constexpr auto subgrid_generator(const subgrid_info &info) const
+			requires(dimensions > 0)
+		{
+			return [info, ptr = &m_data[info.offset], progress = 0](const auto &pos) mutable
+				-> data_type
+			{
+				const data_type result = *ptr;
 				++ptr;
 				if (++progress >= info.period)
 				{
@@ -696,29 +728,6 @@ public:
 				}
 				return result;
 			};
-			return grid<data_type, dimensions - 1>(info.size, generator);
-		}
-
-		/*
-			slices the whole grid into dim[axis] layers.
-		*/
-		VEC_CXP std::vector<grid<data_type, dimensions - 1>> slice(size_t axis = 0) const
-			requires(dimensions > 0)
-		{
-			// todo: find a good abstraction which we can use to either fill one subgrid or a whole sliced grid simultaneously and efficiently.
-			std::vector<grid<data_type, dimensions - 1U>> result;
-			result.reserve(m_dim[axis]);
-			for (size_t layer = 0; layer < m_dim[axis]; ++layer)
-			{
-				result.push_back(subgrid(layer, axis));
-			}
-			return result;
-		}
-
-	private:
-		VEC_CXP void populate_subgrid(const subgrid_info &info) const
-		{
-			// todo: remove or implement (encapsulate algorithm of subgrid)
 		}
 
 	#pragma endregion
