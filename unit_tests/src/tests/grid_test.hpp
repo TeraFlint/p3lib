@@ -156,6 +156,17 @@ P3_UNIT_TEST(grid_size_elements)
 	unit_test::assert_equals<size_t>(210U, size.elements(), "grid_size::elements()");
 }
 
+P3_UNIT_TEST(grid_size_elements_partial)
+{
+	constexpr p3::grid_size<5> size{ 11, 7, 5, 3, 2 };
+	unit_test::assert_equals<size_t>(   1, size.elements(5), "grid_size::elements(5)");
+	unit_test::assert_equals<size_t>(   2, size.elements(4), "grid_size::elements(4)");
+	unit_test::assert_equals<size_t>(   6, size.elements(3), "grid_size::elements(3)");
+	unit_test::assert_equals<size_t>(  30, size.elements(2), "grid_size::elements(2)");
+	unit_test::assert_equals<size_t>( 210, size.elements(1), "grid_size::elements(1)");
+	unit_test::assert_equals<size_t>(2310, size.elements(0), "grid_size::elements(0)");
+}
+
 P3_UNIT_TEST(grid_size_index)
 {
 	constexpr p3::grid_size<3> boundary{ 5, 4, 3 };

@@ -80,15 +80,16 @@ namespace p3
 
 		[[nodiscard]] constexpr size_t elements(size_t most_significant_axis = 0) const
 		{
-			// todo: iterate backwards and stop after the most significant axis.
 			// this should allow us to also calculate contiguous layer sizes.
+			auto rend = this->rbegin();
+			std::advance(rend, dimensions - most_significant_axis);
 
 			// todo: import <numeric>; import <functional>;
-			// return std::accumulate(this->rbegin(), this->rend(), 1, std::multiplies{});
+			// return std::accumulate(this->rbegin(), rend, 1, std::multiplies{});
 			size_t result = 1;
-			for (const auto &item : *this)
+			for (auto iter = this->rbegin(); iter != rend; ++iter)
 			{
-				result *= item;
+				result *= (*iter);
 			}
 			return result;
 		}
