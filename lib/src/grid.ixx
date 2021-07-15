@@ -1,4 +1,9 @@
 export module p3.grid;
+/*
+	Grid module, part of github/TeraFlint/pitrilib.
+	Daniel Wiegert (Pitri), 2021.
+*/
+
 import <vector>;
 import <array>;
 
@@ -16,6 +21,7 @@ import <array>;
 
 
 // also, big todo: replace this with actual constexpr once std::vector is actually constexpr compatible...
+// the standard says it should be, yet it hasn't been implemented, yet?
 #define VEC_CXP
 
 namespace p3
@@ -363,6 +369,9 @@ namespace p3
 #pragma region grid
 
 	export
+	/*
+		n dimensional grid class. can represent a vector, matrix, 3d voxel structure, etc.
+	*/
 	template <typename data_type, size_t dimensions>
 	class grid
 	{
@@ -628,37 +637,75 @@ public:
 	#pragma endregion
 	#pragma region partitons (subgrid, slice)
 
-	public:
-		// in both cases we may choose the axis perpendicular to the cut (axis of constant coordinates)
+	private:
+		struct slice_info
+		{
+			slice_info() = delete;
 
+			explicit constexpr slice_info(const grid_size<dimensions> &original_size, size_t axis)
+				requires(dimensions > 0)
+				: size{ original_size.remove_axis(axis) }, period{ size.elements(axis) }, delta{ original_size.elements(axis) }
+			{
+			}
+
+			constexpr size_t calc_offset(size_t layer)
+			{
+				return layer * period;
+			}
+			constexpr size_t calc_jump() const
+			{
+				return delta - period;
+			}
+
+			const grid_size<dimensions - 1> size;
+			const size_t period, delta;
+		};
+		struct subgrid_info : slice_info
+		{
+			subgrid_info() = delete;
+
+			explicit constexpr subgrid_info(const grid_size<dimensions> &original_size, size_t layer, size_t axis)
+				requires(dimensions > 0)
+				: slice_info(original_size, axis), offset{ this->calc_offset(layer) }, jump{ this->calc_jump() }
+			{
+			}
+
+			const size_t offset, jump;
+		};
+
+	public:
+		/*
+			cuts one slice/layer out of the grid.
+			the axis is perpendicular to the cut (the slice contains all the values with dim[axis] == layer).
+		*/
 		VEC_CXP grid<data_type, dimensions - 1> subgrid(size_t layer, size_t axis = 0) const
 			requires(dimensions > 0)
 		{
-			const auto reduced_size = m_dim.remove_axis(axis);
-			const auto period = reduced_size.elements(axis);
-			const auto delta = reduced_size.elements(axis ? axis - 1 : 0);
-			const auto offset = layer * period;
+			const subgrid_info info(m_dim, layer, axis);
 
 			size_t progress = 0;
-			const data_type *ptr = &m_data[offset];
+			const data_type *ptr = &m_data[info.offset];
 			const auto generator = [&](const auto &pos) -> data_type
 			{
 				const auto result = *ptr;
 				++ptr;
-				if (++progress >= period)
+				if (++progress >= info.period)
 				{
 					progress = 0;
-					ptr += delta;
+					ptr += info.jump;
 				}
 				return result;
 			};
-			return grid<data_type, dimensions - 1>(reduced_size, generator);
+			return grid<data_type, dimensions - 1>(info.size, generator);
 		}
 
+		/*
+			slices the whole grid into dim[axis] layers.
+		*/
 		VEC_CXP std::vector<grid<data_type, dimensions - 1>> slice(size_t axis = 0) const
 			requires(dimensions > 0)
 		{
-			// todo: write subgrid and find a good abstraction which we can use to either fill one subgrid or a whole sliced grid simultaneously and efficiently.
+			// todo: find a good abstraction which we can use to either fill one subgrid or a whole sliced grid simultaneously and efficiently.
 			std::vector<grid<data_type, dimensions - 1U>> result;
 			result.reserve(m_dim[axis]);
 			for (size_t layer = 0; layer < m_dim[axis]; ++layer)
@@ -669,8 +716,10 @@ public:
 		}
 
 	private:
-		// VEC_EXP void populate_subgrid() const;
-
+		VEC_CXP void populate_subgrid(const subgrid_info &info) const
+		{
+			// todo: remove or implement (encapsulate algorithm of subgrid)
+		}
 
 	#pragma endregion
 	#pragma region member variables
