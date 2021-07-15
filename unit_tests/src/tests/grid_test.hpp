@@ -46,11 +46,50 @@ namespace grid_test
 		}
 	}
 
-	template <typename data_type>
-	void subgrid_print_differences(const p3::grid<data_type, 3> &grid, const std::vector<p3::grid<data_type, 2>> &vec, size_t axis)
+	template <size_t dimensions>
+	std::string subgrid_print_size_string(const p3::grid_size<dimensions> &size, size_t axis)
 	{
-		const auto reduced_size = grid.dim().remove_axis(axis);
-		std::cout << std::format("size: {{ {0}, {1}, {2} }} -> {{ {3}, {4} }}", grid.dim_at(0), grid.dim_at(1), grid.dim_at(2), reduced_size[0], reduced_size[1]);
+		// with axis = 1, print this: { 2, 3, 4 } -> { 2, *, 4 } -> { 2, 4 }
+		std::string full, marked, reduced;
+		full.reserve(3 * dimensions);
+		marked.reserve(3 * dimensions);
+		reduced.reserve(3 * (dimensions - 1));
+
+		const std::string spacer = " ";
+		const std::string mark = "*";
+
+		bool first_full = true, first_reduced = true;
+		for (size_t i = 0; i < dimensions; ++i)
+		{
+			const auto dim = std::to_string(size[i]);
+
+			if (!first_full)
+			{
+				full += ',';
+				marked += ',';
+			}
+			first_full = false;
+			full += spacer + dim;
+			marked += spacer + (i == axis ? mark : dim);
+
+			if (i != axis)
+			{
+				if (!first_reduced)
+				{
+					reduced += ',';
+				}
+				first_reduced = false;
+				reduced += spacer + dim;
+			}
+		}
+		return std::format("size: {{{0} }} -> {{{1} }} -> {{{2} }}", full, marked, reduced);
+	}
+
+	template <typename data_type, size_t dimensions>
+	void subgrid_print_differences(const p3::grid<data_type, dimensions + 1> &grid, const std::vector<p3::grid<data_type, dimensions>> &vec, size_t axis)
+	{
+		std::cout << subgrid_print_size_string(grid.dim(), axis);
+
 		size_t layer = 0;
 		for (const auto &item : vec)
 		{
@@ -66,6 +105,32 @@ namespace grid_test
 		}
 		std::cout << std::endl << std::endl;
 	}
+
+	struct segment_gen_inc
+	{
+		constexpr segment_gen_inc(size_t start = 0, size_t period = UINT_MAX, size_t delta = 0)
+			: m_current{ start }, m_period{ period }, m_delta{ delta }, m_progress{ 0 }
+		{
+		}
+
+		template <size_t dim>
+		constexpr int operator()(const p3::grid_pos<dim> &pos)
+		{
+			const auto result = m_current;
+			++m_current;
+			if (++m_progress >= m_period)
+			{
+				m_progress = 0;
+				m_current += m_delta;
+			}
+			return result;
+		}
+
+	private:
+		size_t m_current, m_period, m_delta;
+		size_t m_progress;
+	};
+
 }
 
 #pragma endregion
@@ -621,9 +686,57 @@ P3_UNIT_TEST(grid_subgrid_3d_large)
 	grid_test::assert_subgrid_axis(grid, axis_x, 2);
 }
 
-/*P3_UNIT_TEST(grid_subgrid_4d)
+P3_UNIT_TEST(grid_subgrid_4d)
 {
+	constexpr p3::grid_size<4> size{ 2, 3, 4, 5 };
 
+	constexpr auto reduced_w = size.remove_axis(0);
+	constexpr auto reduced_z = size.remove_axis(1);
+	constexpr auto reduced_y = size.remove_axis(2);
+	constexpr auto reduced_x = size.remove_axis(3);
+
+	constexpr size_t w1 = 3 * 4 * 5, w2 = 0; // ?    // { *, 3, 4, 5 }
+	constexpr size_t z1 =     4 * 5, z2 = 2 * 4 * 5; // { 2, *, 4, 5 }
+	constexpr size_t y1 =         5, y2 =     3 * 5; // { 2, 3, *, 5 }
+	constexpr size_t x1 =         1, x2 =         4; // { 2, 3, 4, * }
+
+	const p3::grid<int, 4> grid(size, [](const auto &pos) { return pos.index(); });  //  0  1  2 ... 117 118 119
+	const std::vector<p3::grid<int, 3>> axis_w // 2 possible subgrids in the first axis
+	{
+		p3::grid<int, 3>(reduced_w, grid_test::segment_gen_inc(0 * w1, w1, w2)),  //  0  1  2 ...  57  58  59
+		p3::grid<int, 3>(reduced_w, grid_test::segment_gen_inc(1 * w1, w1, w2))   // 60 61 62 ... 117 118 119
+	};
+	const std::vector<p3::grid<int, 3>> axis_z // 3 possible subgrids in the first axis
+	{
+		p3::grid<int, 3>(reduced_z, grid_test::segment_gen_inc(0 * z1, z1, z2)),
+		p3::grid<int, 3>(reduced_z, grid_test::segment_gen_inc(1 * z1, z1, z2)),
+		p3::grid<int, 3>(reduced_z, grid_test::segment_gen_inc(2 * z1, z1, z2))
+	};
+	const std::vector<p3::grid<int, 3>> axis_y // 4 possible subgrids in the first axis
+	{
+		p3::grid<int, 3>(reduced_y, grid_test::segment_gen_inc(0 * y1, y1, y2)),
+		p3::grid<int, 3>(reduced_y, grid_test::segment_gen_inc(1 * y1, y1, y2)),
+		p3::grid<int, 3>(reduced_y, grid_test::segment_gen_inc(2 * y1, y1, y2)),
+		p3::grid<int, 3>(reduced_y, grid_test::segment_gen_inc(3 * y1, y1, y2))
+	};
+	const std::vector<p3::grid<int, 3>> axis_x // 5 possible subgrids in the first axis
+	{
+		p3::grid<int, 3>(reduced_x, grid_test::segment_gen_inc(0 * x1, x1, x2)),
+		p3::grid<int, 3>(reduced_x, grid_test::segment_gen_inc(1 * x1, x1, x2)),
+		p3::grid<int, 3>(reduced_x, grid_test::segment_gen_inc(2 * x1, x1, x2)),
+		p3::grid<int, 3>(reduced_x, grid_test::segment_gen_inc(3 * x1, x1, x2)),
+		p3::grid<int, 3>(reduced_x, grid_test::segment_gen_inc(4 * x1, x1, x2))
+	};
+
+	grid_test::subgrid_print_differences(grid, axis_w, 0);
+	grid_test::subgrid_print_differences(grid, axis_z, 1);
+	grid_test::subgrid_print_differences(grid, axis_y, 2);
+	grid_test::subgrid_print_differences(grid, axis_x, 3);
+
+	grid_test::assert_subgrid_axis(grid, axis_w, 0);
+	grid_test::assert_subgrid_axis(grid, axis_z, 1);
+	grid_test::assert_subgrid_axis(grid, axis_y, 2);
+	grid_test::assert_subgrid_axis(grid, axis_x, 3);
 }*/
 
 /*P3_UNIT_TEST(grid_slice)

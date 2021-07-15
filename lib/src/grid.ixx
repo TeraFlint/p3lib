@@ -426,7 +426,7 @@ public:
 
 		// size + generator constructor
 		template <grid_generator<dimensions> generator_type>
-		explicit VEC_CXP grid(const grid_size<dimensions> &size, const generator_type &generator)
+		explicit VEC_CXP grid(const grid_size<dimensions> &size, generator_type generator)
 			: m_dim{ size }
 		{
 			const auto fill = [&]()
@@ -441,7 +441,7 @@ public:
 
 		// grid + converter constructor
 		template <typename compatible_type, typename converter_type>
-		explicit VEC_CXP grid(const grid<compatible_type, dimensions> &other, const converter_type &converter)
+		explicit VEC_CXP grid(const grid<compatible_type, dimensions> &other, converter_type converter)
 			: m_dim{ other.dim() }
 		{
 			const auto fill = [&]()
