@@ -634,16 +634,25 @@ public:
 		VEC_CXP grid<data_type, dimensions - 1> subgrid(size_t layer, size_t axis = 0) const
 			requires(dimensions > 0)
 		{
-			const auto new_size = m_dim.remove_axis(axis);
-			grid<data_type, dimensions - 1> result(new_size);
+			const auto reduced_size = m_dim.remove_axis(axis);
+			const auto period = reduced_size.elements(axis);
+			const auto delta = reduced_size.elements(axis ? axis - 1 : 0);
+			const auto offset = layer * period;
 
-			// start = axis * (product of all axes after the stolen axis)
-
-
-			// if our axis is lower than the stolen axis, we just keep going, incrementing by one.
-			// if it's above, we increment by the size of the stolen axis.
-
-			return result;
+			size_t progress = 0;
+			const data_type *ptr = &m_data[offset];
+			const auto generator = [&](const auto &pos) -> data_type
+			{
+				const auto result = *ptr;
+				++ptr;
+				if (++progress >= period)
+				{
+					progress = 0;
+					ptr += delta;
+				}
+				return result;
+			};
+			return grid<data_type, dimensions - 1>(reduced_size, generator);
 		}
 
 		VEC_CXP std::vector<grid<data_type, dimensions - 1>> slice(size_t axis = 0) const
