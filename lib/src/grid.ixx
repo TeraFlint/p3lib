@@ -4,9 +4,6 @@ export module p3.grid;
 	Daniel Wiegert (Pitri), 2021.
 */
 
-// change to 0 for standalone model
-#define USE_META 0
-
 import <vector>;
 import <array>;
 
@@ -22,11 +19,6 @@ import <array>;
 // once the classes are finished, I add the imports it and swap out the manual implementations.
 // thanks to the added unit tests, I'll then be able to see if it broke or not.
 
-
-#if USE_META
-// future module, prodiving meta data about the implementation state of classes.
-import <p3.meta>;
-#endif
 
 
 // also, big todo: replace this with actual constexpr once std::vector is actually constexpr compatible...
@@ -782,12 +774,5 @@ public:
 	#pragma endregion
 	};
 
-#pragma endregion
-#pragma region meta
-#if USE_META
-
-	// 
-
-#endif
 #pragma endregion
 }

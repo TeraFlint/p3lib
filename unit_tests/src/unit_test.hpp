@@ -32,13 +32,20 @@ namespace unit_test
 
 	namespace text
 	{
+		// once std::string actually becomes constexpr compatible, I'll use this instead of the literals down there.
+		// still waiting for the delivery, dear C++20 library implementers... :P
+		inline constexpr std::string console_color(size_t index)
+		{
+			return "\x1B" + std::to_string(index) + "[30m";
+		}
+
 		// \x1B[XXm <- XX is the 2 digit code
 		constexpr auto black1   = "\x1B[30m";
 		constexpr auto black2   = "\x1B[90m";
 		constexpr auto red1     = "\x1B[31m";
 		constexpr auto red2     = "\x1B[91m";
 		constexpr auto green1   = "\x1B[32m";
-		constexpr auto green2   = "\x1B[92m";		
+		constexpr auto green2   = "\x1B[92m";
 		constexpr auto yellow1  = "\x1B[33m";
 		constexpr auto yellow2  = "\x1B[93m";
 		constexpr auto blue1    = "\x1B[34m";
@@ -49,6 +56,9 @@ namespace unit_test
 		constexpr auto cyan2    = "\x1B[96m";
 		constexpr auto white1   = "\x1B[37m";
 		constexpr auto white2   = "\x1B[97m";
+
+		// These console color codes work since windows 10. These are unix color codes, right?
+		// So I assume, I won't need to wrap this into a #if defined(_WIN32) block?
 	}
 
 #pragma endregion
