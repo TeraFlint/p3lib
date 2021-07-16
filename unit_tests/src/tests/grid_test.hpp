@@ -472,6 +472,29 @@ P3_UNIT_TEST(grid_value_assignment)
 	}
 }
 
+P3_UNIT_TEST(grid_inside)
+{
+	const p3::grid<int, 4> grid({ 8, 6, 3, 4 });
+	unit_test::assert_equals<bool>( true, grid.inside({ 0, 0, 0, 0 }), "grid::inside({ 0, 0, 0, 0 })");
+	unit_test::assert_equals<bool>( true, grid.inside({ 0, 0, 0, 1 }), "grid::inside({ 0, 0, 0, 1 })");
+	unit_test::assert_equals<bool>( true, grid.inside({ 0, 0, 1, 1 }), "grid::inside({ 0, 0, 1, 1 })");
+	unit_test::assert_equals<bool>( true, grid.inside({ 0, 1, 1, 1 }), "grid::inside({ 0, 1, 1, 1 })");
+	unit_test::assert_equals<bool>( true, grid.inside({ 1, 1, 1, 1 }), "grid::inside({ 1, 1, 1, 1 })");
+
+	unit_test::assert_equals<bool>( true, grid.inside({ 7, 5, 2, 3 }), "grid::inside({ 7, 5, 2, 3 })");
+
+	unit_test::assert_equals<bool>(false, grid.inside({ 7, 5, 2, 4 }), "grid::inside({ 7, 5, 2, 4 })");
+	unit_test::assert_equals<bool>(false, grid.inside({ 7, 5, 3, 3 }), "grid::inside({ 7, 5, 3, 3 })");
+	unit_test::assert_equals<bool>(false, grid.inside({ 7, 6, 2, 3 }), "grid::inside({ 7, 6, 2, 3 })");
+	unit_test::assert_equals<bool>(false, grid.inside({ 8, 5, 2, 3 }), "grid::inside({ 8, 5, 2, 3 })");
+
+	unit_test::assert_equals<bool>(false, grid.inside({ 0, 0, 0, 4 }), "grid::inside({ 0, 0, 0, 4 })");
+	unit_test::assert_equals<bool>(false, grid.inside({ 0, 0, 3, 0 }), "grid::inside({ 0, 0, 3, 0 })");
+	unit_test::assert_equals<bool>(false, grid.inside({ 0, 6, 0, 0 }), "grid::inside({ 0, 6, 0, 0 })");
+	unit_test::assert_equals<bool>(false, grid.inside({ 8, 0, 0, 0 }), "grid::inside({ 8, 0, 0, 0 })");
+
+}
+
 P3_UNIT_TEST(grid_iterators)
 {
 	constexpr p3::grid_size<2> size{ 16, 16 };
@@ -569,7 +592,7 @@ P3_UNIT_TEST(grid_iterate)
 	grid_mutable.iterate(assert_zeroes);
 }
 
-/*P3_UNIT_TEST(grid_resize_predefined)
+P3_UNIT_TEST(grid_resize_predefined)
 {
 	using data_type = unsigned short;
 
@@ -582,6 +605,8 @@ P3_UNIT_TEST(grid_iterate)
 		30, 31, 32, 33, 34,
 		40, 41, 42, 43, 44
 	});
+
+	const auto copy = original;
 
 	const p3::grid<data_type, 2> minus_minus({ 4, 3 },
 	{
@@ -620,18 +645,19 @@ P3_UNIT_TEST(grid_iterate)
 		00, 00, 00, 00, 00, 00, 00, 00
 	});
 
-	const auto compare = [&](const auto &expected, const std::string &name)
+	const auto compare = [&](const auto &actual, const std::string &name)
 	{
 		auto grid = original;
-		grid.resize(expected.dim());
-		grid_test::assert_equal_grids(expected, grid, name);
+		grid.resize(actual.dim());
+		grid_test::assert_equal_grids(grid, actual, name);
 	};
 
-	// compare(minus_minus, "minus_minus");
-	// compare(minus_plus,  "minus_plus");
-	// compare(plus_minus,  "plus_minus");
-	// compare(plus_plus,   "plus_plus");
-}*/
+	compare(copy, "copy");
+	compare(minus_minus, "minus_minus");
+	compare(minus_plus,  "minus_plus");
+	compare(plus_minus,  "plus_minus");
+	compare(plus_plus,   "plus_plus");
+}
 
 P3_UNIT_TEST(grid_subgrid_3d_small)
 {

@@ -589,6 +589,12 @@ public:
 			return grid_size<dimensions>::from_index(index, m_dim);
 		}
 
+		[[nodiscard]] constexpr bool inside(const grid_size<dimensions> &pos) const
+		{
+			const auto check = [](auto dim, auto pos) { return pos < dim; };
+			return dual_iteration_n(dimensions, m_dim.begin(), pos.begin(), check);
+		}
+
 	#pragma endregion
 	#pragma region accessors
 
@@ -699,12 +705,14 @@ public:
 		}
 
 		// preserves the positions of elements in the grid. cut-off elements due to axis shrinkage will be lost.
-		// VEC_CXP void resize(const grid_size<dimensions> &size)
-		// {
-			// step 1: implement naive approach
-
-			// step 2: make it faster
-		// }
+		VEC_CXP void resize(const grid_size<dimensions> &size)
+		{
+			// todo: make it faster (and in-place)
+			// it's nice how my constructors and abstractions theoretically allows me to make a oneliner out of this.
+			// however, this is a very naive and potentially expensive approach, as a whole grid gets copied. :/
+			// this is going to be similarly complicated and brain wrecking as grid::subgrid(), I fear...
+			*this = this_type(size, [&](const auto &pos) { return this->inside(pos.pos()) ? this->at(pos.pos()) : data_type{}; });
+		}
 
 	#pragma endregion
 	#pragma region partitons (subgrid, slice)
