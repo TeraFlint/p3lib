@@ -85,9 +85,11 @@ namespace p3
 			}
 		}
 
+		/*
+			returns the number of elements for the whole grid (axis = 0) or any "layer" inside the grid (axis > 0)
+		*/
 		[[nodiscard]] constexpr size_t elements(size_t most_significant_axis = 0) const
 		{
-			// this should allow us to also calculate contiguous layer sizes.
 			auto rend = this->rbegin();
 			std::advance(rend, dimensions - most_significant_axis);
 
@@ -350,7 +352,7 @@ namespace p3
 	};
 
 #pragma endregion
-#pragma region grid generators
+#pragma region grid generators + concept
 
 	template <typename data_type>
 	concept any_type = true;
@@ -391,10 +393,44 @@ namespace p3
 			};
 		}
 
-		// axis_binary_op
-		// axis_add
-		// axis_mul 
-		// axis_xor
+		export
+		template <typename data_type, typename function_type>
+		constexpr auto axis_binary_operation(const data_type &identity = {}, const function_type &binary_operation = {})
+		{
+			return [=](const auto &pos)
+			{
+				auto result = identity;
+				for (const auto &val : pos.pos())
+				{
+					result = binary_operation(result, val);
+				}
+				return result;
+			};
+		}
+
+		export
+		template <typename data_type>
+		constexpr auto axis_add()
+		{
+			return axis_binary_operation<data_type, std::plus<data_type>>();
+		}
+
+		export
+		template <typename data_type>
+		constexpr auto axis_mul()
+		{
+			return axis_binary_operation<data_type, std::multiplies<data_type>>(1);
+		}
+
+		export
+		template <typename data_type>
+		constexpr auto axis_xor()
+		{
+			// todo: import <functional>;
+			// return axis_binary_operation<data_type, std::bit_xor<data_type>>();
+
+			return axis_binary_operation<data_type>(0, [](const auto &a, const auto &b) { return a ^ b; });
+		}
 	}
 
 #pragma endregion

@@ -396,6 +396,53 @@ P3_UNIT_TEST(grid_gen_decimal_unrestricted)
 	grid_test::assert_equal_grids(expected, actual, "grid_gen::positional_notation(10)");
 }
 
+P3_UNIT_TEST(grid_gen_binary_operators)
+{
+	const p3::grid<int, 2> expected_add({ 5, 5 },
+	{
+		 0,  1,  2,  3,  4,  
+		 1,  2,  3,  4,  5,  
+		 2,  3,  4,  5,  6,  
+		 3,  4,  5,  6,  7,  
+		 4,  5,  6,  7,  8
+	});
+
+	const p3::grid<int, 2> expected_mul({11, 11},
+	{
+		0,  0,  0,  0,  0,  0,  0,  0,  0,  0,   0,
+		0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,
+		0,  2,  4,  6,  8, 10, 12, 14, 16, 18,  20,
+		0,  3,  6,  9, 12, 15, 18, 21, 24, 27,  30,
+		0,  4,  8, 12, 16, 20, 24, 28, 32, 36,  40,
+		0,  5, 10, 15, 20, 25, 30, 35, 40, 45,  50,
+		0,  6, 12, 18, 24, 30, 36, 42, 48, 54,  60,
+		0,  7, 14, 21, 28, 35, 42, 49, 56, 63,  70,
+		0,  8, 16, 24, 32, 40, 48, 56, 64, 72,  80,
+		0,  9, 18, 27, 36, 45, 54, 63, 72, 81,  90,
+		0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+	});
+
+	const p3::grid<int, 2> expected_xor({ 8, 8 }, 
+	{
+		0, 1, 2, 3, 4, 5, 6, 7,
+		1, 0, 3, 2, 5, 4, 7, 6,
+		2, 3, 0, 1, 6, 7, 4, 5,
+		3, 2, 1, 0, 7, 6, 5, 4,
+		4, 5, 6, 7, 0, 1, 2, 3,
+		5, 4, 7, 6, 1, 0, 3, 2,
+		6, 7, 4, 5, 2, 3, 0, 1,
+		7, 6, 5, 4, 3, 2, 1, 0
+	});
+
+	const p3::grid<int, 2> actual_add(expected_add.dim(), p3::grid_gen::axis_add<int>());
+	const p3::grid<int, 2> actual_mul(expected_mul.dim(), p3::grid_gen::axis_mul<int>());
+	const p3::grid<int, 2> actual_xor(expected_xor.dim(), p3::grid_gen::axis_xor<int>());
+
+	grid_test::assert_equal_grids(expected_add, actual_add, "grid_gen::axis_add()");
+	grid_test::assert_equal_grids(expected_mul, actual_mul, "grid_gen::axis_mul()");
+	grid_test::assert_equal_grids(expected_xor, actual_xor, "grid_gen::axis_xor()");
+}
+
 P3_UNIT_TEST(grid_value_assignment)
 {
 	constexpr p3::grid_size<2> position = { 1, 2 };
@@ -562,7 +609,7 @@ P3_UNIT_TEST(grid_iterate)
 		00, 00
 	});
 
-	const p3::grid<data_type, 2> plus_plus({ 7, 8 }
+	const p3::grid<data_type, 2> plus_plus({ 7, 8 },
 	{
 		00, 01, 02, 03, 04, 00, 00, 00, 
 		10, 11, 12, 13, 14, 00, 00, 00,
@@ -573,34 +620,17 @@ P3_UNIT_TEST(grid_iterate)
 		00, 00, 00, 00, 00, 00, 00, 00
 	});
 
-
-
-	auto test = original;
-	// test.resize();
-}*/
-
-/*P3_UNIT_TEST(grid_resize_generated)
-{
-	using data_type = unsigned short;
-
-	const auto generator = [](auto size)
+	const auto compare = [&](const auto &expected, const std::string &name)
 	{
-		return [=] (const auto &pos)
-		{
-			data_type index = 0, layer_size = 1;
-			for (auto iter = pos.pos().rbegin(); iter != pos.pos().rend(); ++iter)
-			{
-				index += (*iter) * layer_size;
-				layer_size *= 10;
-			}
-			return index;
-		};
+		auto grid = original;
+		grid.resize(expected.dim());
+		grid_test::assert_equal_grids(expected, grid, name);
 	};
 
-	const auto create_grid = [&](auto size)
-	{
-		return p3::grid<data_type, 3>(size, generator(size));
-	};
+	// compare(minus_minus, "minus_minus");
+	// compare(minus_plus,  "minus_plus");
+	// compare(plus_minus,  "plus_minus");
+	// compare(plus_plus,   "plus_plus");
 }*/
 
 P3_UNIT_TEST(grid_subgrid_3d_small)
