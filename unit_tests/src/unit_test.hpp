@@ -167,6 +167,57 @@ namespace unit_test
 	}
 
 #pragma endregion
+#pragma region exceptions
+
+	class assertion_fail : public std::exception
+	{
+		using std::exception::exception;
+	};
+
+	class assert_equals_fail : public assertion_fail
+	{
+		using assertion_fail::assertion_fail;
+	};
+
+	class assert_bool_fail : public assertion_fail
+	{
+		using assertion_fail::assertion_fail;
+	};
+
+#pragma endregion
+#pragma region asserters
+
+	template <typename data_type>
+	concept formattable = requires(std::formatter<data_type> fmt)
+	{
+		// I think fmt can't even exist as an object if it has no overload.
+		// so, this... should be it?
+		true;
+	};
+
+	template <typename data_type>
+	concept comparable_formattable = std::equality_comparable<data_type> && formattable<data_type>;
+
+	/*template <typename data_type>
+	struct equality_asserter
+	{
+		// todo: make meta module and instead use p3::implementation<type>::state;
+		constexpr bool is_impl() { return false; }
+	};
+
+	template <typename data_type>
+	struct p3::implementation<data_type>
+	{
+		static constexpr impl_state state = not_implemented;
+	};
+
+	template <comparable_formattable data_type>
+	struct equality_asserter<data_type>
+	{
+		constexpr bool is_impl() { return true; }
+	};*/
+
+#pragma endregion
 #pragma region assertions
 
 	template <bool useless = true>
@@ -183,15 +234,7 @@ namespace unit_test
 		return std::format("{0}: expected {1} but got {2}{3}, at {4}", header, expected, actual, modified_body, source_location_string(location));
 	}
 
-	class assertion_fail : public std::exception
-	{
-		using std::exception::exception;
-	};
 
-	class assert_equals_fail : public assertion_fail
-	{
-		using assertion_fail::assertion_fail;
-	};
 
 	template <typename data_type>
 	void assert_equals(const data_type &expected, const data_type &actual, const std::string &body = {}, const std::source_location location = std::source_location::current())
@@ -219,10 +262,7 @@ namespace unit_test
 		}
 	}
 
-	class assert_bool_fail : public assertion_fail
-	{
-		using assertion_fail::assertion_fail;
-	};
+
 
 #pragma endregion
 }
