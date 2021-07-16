@@ -195,39 +195,6 @@ namespace unit_test
 	};
 
 #pragma endregion
-#pragma region asserters
-
-	template <typename data_type>
-	concept formattable = requires(std::formatter<data_type> fmt)
-	{
-		// I think fmt can't even exist as an object if it has no overload.
-		// so, this... should be it?
-		true;
-	};
-
-	template <typename data_type>
-	concept comparable_formattable = std::equality_comparable<data_type> && formattable<data_type>;
-
-	/*template <typename data_type>
-	struct equality_asserter
-	{
-		// todo: make meta module and instead use p3::implementation<type>::state;
-		constexpr bool is_impl() { return false; }
-	};
-
-	template <typename data_type>
-	struct p3::implementation<data_type>
-	{
-		static constexpr impl_state state = not_implemented;
-	};
-
-	template <comparable_formattable data_type>
-	struct equality_asserter<data_type>
-	{
-		constexpr bool is_impl() { return true; }
-	};*/
-
-#pragma endregion
 #pragma region assertions
 
 	template <bool useless = true>
