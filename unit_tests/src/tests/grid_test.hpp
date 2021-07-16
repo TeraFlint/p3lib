@@ -7,42 +7,45 @@ import p3.grid;
 
 namespace grid_test
 {
-	template <typename iterator_type, typename step_type, typename between_type>
-	constexpr void iterate_with_delimiter(const iterator_type &begin, const iterator_type &end, const step_type &step, const between_type &between)
+	template <typename data_type, size_t size>
+	void assert_equal_grids(const p3::grid<data_type, size> &expected, const p3::grid<data_type, size> &actual, const std::string &name)
 	{
-		bool first = true;
-		for (auto here = begin; here != end; ++here)
+		// todo: create a universal equality_asserter<type> in unit test and convert this into a specialization of it.
+
+		const auto append_optional = [](const std::string &optional, const std::string &append)
 		{
-			if (!first)
+			if (optional.empty())
 			{
-				between();
+				return append;
 			}
-			step(*here, first);
-			first = false;
+			return optional + ": " + append;
+		};
+
+		if (actual.dim() != expected.dim())
+		{
+			unit_test::assert_equals(0, 1, append_optional(name, "dimensions did not match"));
+		}
+
+		unit_test::assert_equals(actual.size(), expected.size(), append_optional(name, "serious error: size did not match, despite dimensions matching"));
+
+		auto actual_iter = actual.begin();
+		auto expected_iter = expected.begin();
+
+		size_t index = 0;
+		for (; actual_iter != actual.end() && expected_iter != expected.end(); ++actual_iter, ++expected_iter)
+		{
+			unit_test::assert_equals<data_type>(*expected_iter, *actual_iter, append_optional(name, std::format("value mismatch at grid[{}]", index)));
+			++index;
 		}
 	}
 
 	template <typename data_type, size_t dimensions>
-	constexpr void assert_subgrid(const p3::grid<data_type, dimensions> &expected, const p3::grid<data_type, dimensions> &actual, size_t index, size_t axis)
-	{
-		const auto name = std::format("grid::subgrid({0}, {1})", index, axis);
-		if (expected.dim() != actual.dim())
-		{
-			unit_test::assert_equals(0, 1, std::format("{0}: grid size mismatch", name));
-		}
-
-		for (size_t i = 0; i < expected.size(); ++i)
-		{
-			unit_test::assert_equals(expected[i], actual[i], std::format("{0}: value mismatch at grid[{1}]", name, i));
-		}
-	}
-
-	template <typename data_type, size_t dimensions>
-	void assert_subgrid_axis(const p3::grid<data_type, dimensions+1> &grid, const std::vector<p3::grid<data_type, dimensions>> &vec, size_t axis)
+	void assert_subgrid_axis(const p3::grid<data_type, dimensions + 1> &grid, const std::vector<p3::grid<data_type, dimensions>> &vec, size_t axis)
 	{
 		for (size_t index = 0; index < vec.size(); ++index)
 		{
-			assert_subgrid(vec[index], grid.subgrid(index, axis), index, axis);
+			// assert_subgrid(vec[index], grid.subgrid(index, axis), index, axis);
+			assert_equal_grids(vec[index], grid.subgrid(index, axis), std::format("grid::subgrid({0}, {1})", index, axis));
 		}
 	}
 }
@@ -370,6 +373,29 @@ P3_UNIT_TEST(grid_constructor_converter)
 	}
 }
 
+P3_UNIT_TEST(grid_gen_ascending)
+{
+	const p3::grid<int, 3> expected({ 5, 2, 3 }, { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29 });
+	const p3::grid<int, 3> actual(expected.dim(), p3::grid_gen::ascending<3>);
+	grid_test::assert_equal_grids(expected, actual, "grid_gen::ascending<3>()");
+}
+
+P3_UNIT_TEST(grid_gen_decimal_unrestricted)
+{
+	const p3::grid<int, 2> expected({ 7, 6 },
+	{
+		00, 01, 02, 03, 04, 05,
+		10, 11, 12, 13, 14, 15,
+		20, 21, 22, 23, 24, 25,
+		30, 31, 32, 33, 34, 35,
+		40, 41, 42, 43, 44, 45,
+		50, 51, 52, 53, 54, 55,
+		60, 61, 62, 63, 64, 65
+	});
+	const p3::grid<int, 2> actual(expected.dim(), p3::grid_gen::positional_notation<int>(10));
+	grid_test::assert_equal_grids(expected, actual, "grid_gen::positional_notation(10)");
+}
+
 P3_UNIT_TEST(grid_value_assignment)
 {
 	constexpr p3::grid_size<2> position = { 1, 2 };
@@ -484,7 +510,7 @@ P3_UNIT_TEST(grid_iterate)
 	const auto   overwrite_zeroes = [](const auto &pos, auto &val) { val = 0; };
 	const auto      assert_zeroes = [](const auto &pos, const auto &val) { unit_test::assert_equals<int>(0, val, "grid::iterate(): value is not zero."); };
 
-	const p3::grid<int, 4> grid_const({ 3, 3, 3, 3 }, generate_ascending);
+	const p3::grid<int, 4> grid_const({ 3, 3, 3, 3 }, &p3::grid_gen::ascending<4>);
 	grid_const.iterate(assert_ascending);
 	grid_const.iterate(count_iterations);
 	unit_test::assert_equals<size_t>(grid_const.size(), iterations, "grid::iterate(): iteration count mismatch");
@@ -496,9 +522,90 @@ P3_UNIT_TEST(grid_iterate)
 	grid_mutable.iterate(assert_zeroes);
 }
 
+/*P3_UNIT_TEST(grid_resize_predefined)
+{
+	using data_type = unsigned short;
+
+	// I am aware that I'm using octal values here. as long as I don't go above 07, I'm fine.
+	const p3::grid<data_type, 2> original({ 5, 5 },
+	{
+		00, 01, 02, 03, 04,
+		10, 11, 12, 13, 14,
+		20, 21, 22, 23, 24,
+		30, 31, 32, 33, 34,
+		40, 41, 42, 43, 44
+	});
+
+	const p3::grid<data_type, 2> minus_minus({ 4, 3 },
+	{
+		00, 01, 02,
+		10, 11, 12,
+		20, 21, 22,
+		30, 31, 32
+	});
+
+	const p3::grid<data_type, 2> minus_plus({ 3, 6 },
+	{
+		00, 01, 02, 03, 04, 00,
+		10, 11, 12, 13, 14, 00,
+		20, 21, 22, 23, 24, 00
+	});
+
+	const p3::grid<data_type, 2> plus_minus({ 7, 2 },
+	{
+		00, 01,
+		10, 11,
+		20, 21,
+		30, 31, 
+		40, 41,
+		00, 00,
+		00, 00
+	});
+
+	const p3::grid<data_type, 2> plus_plus({ 7, 8 }
+	{
+		00, 01, 02, 03, 04, 00, 00, 00, 
+		10, 11, 12, 13, 14, 00, 00, 00,
+		20, 21, 22, 23, 24, 00, 00, 00,
+		30, 31, 32, 33, 34, 00, 00, 00,
+		40, 41, 42, 43, 44, 00, 00, 00,
+		00, 00, 00, 00, 00, 00, 00, 00,
+		00, 00, 00, 00, 00, 00, 00, 00
+	});
+
+
+
+	auto test = original;
+	// test.resize();
+}*/
+
+/*P3_UNIT_TEST(grid_resize_generated)
+{
+	using data_type = unsigned short;
+
+	const auto generator = [](auto size)
+	{
+		return [=] (const auto &pos)
+		{
+			data_type index = 0, layer_size = 1;
+			for (auto iter = pos.pos().rbegin(); iter != pos.pos().rend(); ++iter)
+			{
+				index += (*iter) * layer_size;
+				layer_size *= 10;
+			}
+			return index;
+		};
+	};
+
+	const auto create_grid = [&](auto size)
+	{
+		return p3::grid<data_type, 3>(size, generator(size));
+	};
+}*/
+
 P3_UNIT_TEST(grid_subgrid_3d_small)
 {
-	const p3::grid<int, 3> grid({ 2, 3, 4 }, [](const auto &pos) { return pos.index(); });  //  0  1  2 ...  9 10 11
+	const p3::grid<int, 3> grid({ 2, 3, 4 }, &p3::grid_gen::ascending<3>);  //  0  1  2 ...  9 10 11
 	const std::vector<p3::grid<int, 2>> axis_z // 2 possible subgrids in the first axis
 	{
 		p3::grid<int, 2>({ 3, 4 }, {  0,  1,  2,  3,    4,  5,  6,  7,    8,  9, 10, 11 }),
@@ -525,7 +632,7 @@ P3_UNIT_TEST(grid_subgrid_3d_small)
 
 P3_UNIT_TEST(grid_subgrid_3d_large)
 {
-	const p3::grid<int, 3> grid({ 3, 4, 5 }, [](const auto &pos) { return pos.index(); });  //  0  1  2 ... 57 58 59
+	const p3::grid<int, 3> grid({ 3, 4, 5 }, &p3::grid_gen::ascending<3>);  //  0  1  2 ... 57 58 59
 	const std::vector<p3::grid<int, 2>> axis_z // 3 possible subgrids in the first axis
 	{
 		p3::grid<int, 2>({ 4, 5 }, {  0,  1,  2,  3,  4,    5,  6,  7,  8,  9,   10, 11, 12, 13, 14,   15, 16, 17, 18, 19 }),
@@ -555,11 +662,7 @@ P3_UNIT_TEST(grid_subgrid_3d_large)
 
 P3_UNIT_TEST(grid_subgrid_4d_tiny)
 {
-	const p3::grid<int, 4> grid({ 2, 2, 2, 2 }, [](const auto &pos) { return pos.index(); });
-	// for (size_t i = 0; i < grid.rank(); ++i)
-	// {
-	// 	auto slices = grid.slice(i);
-	// }
+	const p3::grid<int, 4> grid({ 2, 2, 2, 2 }, &p3::grid_gen::ascending<4>);
 
 	const std::vector<std::vector<p3::grid<int, 3>>> data
 	{
@@ -609,7 +712,7 @@ P3_UNIT_TEST(grid_subgrid_4d_tiny)
 
 P3_UNIT_TEST(grid_slice)
 {
-	const p3::grid<int, 3> grid({ 3, 4, 5 }, [&](const auto &pos) { return pos.index(); });
+	const p3::grid<int, 3> grid({ 3, 4, 5 }, &p3::grid_gen::ascending<3>);
 
 	// slice through every axis and compare each slice with a subgrid.
 	for (size_t axis = 0; axis < grid.rank(); ++axis)

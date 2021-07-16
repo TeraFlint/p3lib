@@ -349,7 +349,7 @@ namespace p3
 	};
 
 #pragma endregion
-#pragma region grid modifier concept
+#pragma region grid generators
 
 	template <typename data_type>
 	concept any_type = true;
@@ -364,6 +364,37 @@ namespace p3
 	{
 		{ function(grid_pos<dim>{}) } -> any_type;
 	};
+
+	namespace grid_gen
+	{
+		export
+		template <size_t dimensions>
+		constexpr size_t ascending(const p3::grid_pos<dimensions> &pos)
+		{
+			return pos.index();
+		}
+
+		export
+		template <typename data_type>
+		constexpr auto positional_notation(size_t base = 10)
+		{
+			return [=](const auto &pos)
+			{
+				data_type index = 0, layer_size = 1;
+				for (auto iter = pos.pos().rbegin(); iter != pos.pos().rend(); ++iter)
+				{
+					index += (*iter) * layer_size;
+					layer_size *= base;
+				}
+				return index;
+			};
+		}
+
+		// axis_binary_op
+		// axis_add
+		// axis_mul 
+		// axis_xor
+	}
 
 #pragma endregion
 #pragma region grid
@@ -633,7 +664,9 @@ public:
 		// preserves the positions of elements in the grid. cut-off elements due to axis shrinkage will be lost.
 		// VEC_CXP void resize(const grid_size<dimensions> &size)
 		// {
-			// todo
+			// step 1: implement naive approach
+
+			// step 2: make it faster
 		// }
 
 	#pragma endregion
