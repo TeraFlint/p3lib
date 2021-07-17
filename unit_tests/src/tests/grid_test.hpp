@@ -348,6 +348,29 @@ P3_UNIT_TEST(grid_constructor_generator)
 	}
 }
 
+P3_UNIT_TEST(grid_constructor_endless_loop)
+{
+	// so the idea of this test was initially to make an endless loop, by writing to the given position object.
+	// It was supposed to fail whenever the position index wasn't fitting anymore.
+	// I did not explicitly program it like that, but I was pleasantly surprised when the program didn't compile with a non-const reference.
+
+	// my fix to that would have been to add a const ref in the constructor (aliasing my position), and passing that one through.
+	// the alternative of just stupidly copying the position for every entry (even for const ref functions) was immediately off the table.
+
+	constexpr p3::grid_size<4> size{ 6, 3, 5, 8 };
+	constexpr auto elements = size.elements();
+
+	size_t index = 0;
+	const auto generator = [&](const auto &pos) // [&](auto &pos)
+	{
+		// pos.pos() = {};
+		unit_test::assert_equals(index, pos.index(), "position index mismatch");
+		return index++;
+	};
+
+	const p3::grid<size_t, 4> obj(size, generator);
+}
+
 P3_UNIT_TEST(grid_constructor_converter)
 {
 	constexpr p3::grid_size<3> size{ 3, 4, 5 };
@@ -492,7 +515,6 @@ P3_UNIT_TEST(grid_inside)
 	unit_test::assert_equals<bool>(false, grid.inside({ 0, 0, 3, 0 }), "grid::inside({ 0, 0, 3, 0 })");
 	unit_test::assert_equals<bool>(false, grid.inside({ 0, 6, 0, 0 }), "grid::inside({ 0, 6, 0, 0 })");
 	unit_test::assert_equals<bool>(false, grid.inside({ 8, 0, 0, 0 }), "grid::inside({ 8, 0, 0, 0 })");
-
 }
 
 P3_UNIT_TEST(grid_iterators)
