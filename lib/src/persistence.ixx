@@ -1,5 +1,8 @@
 export module p3.persistence;
 
+import <iostream>;
+import <fstream>;
+
 // see p3.grid
 #define INTELLISENSE_HACK
 
@@ -9,20 +12,27 @@ import <filesystem>;
 
 namespace p3
 {
-	// here's my plan for 3 similar abstract classes:
+#pragma region helpers
 
-	// file_access
-	// 	   load(path) -> on_load(path);
-	// 	   save(path) -> on_save(path);
+	class stream_flag_saver
+	{
+	public:
+		stream_flag_saver(std::ios &stream)
+			: m_stream(stream), m_flags(stream.flags())
+		{
+		}
 
-	// stream_access
-	// 	   read (istream) -> on_read (istream);
-	// 	   write(ostream) -> on_write(ostream);
+		~stream_flag_saver()
+		{
+			m_stream.flags(m_flags);
+		}
 
-	// filestream_access: public file_access, public stream_access
-	// 	   load(path) -> on_load(path) -> read (istream) -> on_read (istream);
-	// 	   save(path) -> on_save(path) -> write(ostream) -> on_write(ostream);
+	private:
+		std::ios &m_stream;
+		std::ios_base::fmtflags m_flags;
+	};
 
+#pragma endregion
 #pragma region file_access
 
 	export
@@ -33,11 +43,10 @@ namespace p3
 		using path_type = const char *;
 #else
 		using path_type = std::filesystem::path;
-
+#endif
 		class no_file      : public std::exception { using std::exception::exception; };
 		class no_directory : public std::exception { using std::exception::exception; };
 		class custom_error : public std::exception { using std::exception::exception; };
-#endif
 
 		void load(const path_type &location)
 		{
@@ -49,11 +58,7 @@ namespace p3
 #endif
 			if (!on_load(location))
 			{
-#if defined(INTELLISENSE_HACK)
-				throw "loading: on_load returned false.";
-#else
 				throw custom_error("loading: on_load returned false.");
-#endif
 			}
 		}
 
@@ -70,11 +75,7 @@ namespace p3
 #endif
 			if (!on_save(location))
 			{
-#if defined(INTELLISENSE_HACK)
-				throw "saving: on_safe returned false.";
-#else
 				throw custom_error("saving: on_safe returned false.");
-#endif
 			}
 		}
 
@@ -111,5 +112,64 @@ namespace p3
 	};
 
 #pragma endregion
+#pragma region stream_access
 
+	export
+	class stream_access
+	{
+	public:
+		class custom_error : public std::exception { using std::exception::exception; };
+
+		void read(std::istream &stream, bool reset_if_fail = false)
+		{
+			stream_flag_saver flags(stream);
+			stream.tellg();
+
+			if (!on_read(stream))
+			{
+				if (reset_if_fail)
+				{
+					stream.seekg(0);
+				}
+				throw custom_error("reading: on_read returned false.");
+			}
+		}
+		void write(std::ostream &stream) const
+		{
+			stream_flag_saver flags(stream);
+
+			if (!on_write(stream))
+			{
+				throw custom_error("writing: on_write returned false.");
+			}
+		}
+
+	protected:
+		virtual bool on_read (std::istream &stream) = 0;
+		virtual bool on_write(std::ostream &stream) const = 0;
+	};
+
+#pragma endregion
+#pragma region filestream_access
+
+	export
+	class filestream_access
+		: public file_access, public stream_access
+	{
+	protected:
+		bool on_load(const path_type &location) override
+		{
+			std::ifstream file(location);
+			read(file);
+			return true;
+		}
+		bool on_save(const path_type &location) const override
+		{
+			std::ofstream file(location);
+			write(file);
+			return true;
+		}
+	};
+
+#pragma endregion
 }
