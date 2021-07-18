@@ -161,6 +161,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\tests\persistence_test.hpp" />
     <ClInclude Include="src\tests\_all.hpp" />
     <ClInclude Include="src\tests\grid_test.hpp" />
     <ClInclude Include="src\unit_test.hpp" />
