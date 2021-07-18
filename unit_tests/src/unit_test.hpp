@@ -137,6 +137,16 @@ namespace unit_test
 				success = false;
 				std::cout << text::yellow1 << " -> " << e.what() << text::white1 << std::endl;
 			}
+			catch (const char *msg)
+			{
+				success = false;
+				std::cout << text::yellow1 << " -> " << msg << text::white1 << std::endl;
+			}
+			catch (...)
+			{
+				success = false;
+				std::cout << text::yellow1 << " -> Something not inheriting from std::exception has been thrown" << text::white1 << std::endl;
+			}
 
 			const auto &color1 = success ? text::green1 : text::red1;
 			const auto &color2 = success ? text::green2 : text::red2;
