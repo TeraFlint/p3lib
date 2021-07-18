@@ -495,6 +495,15 @@ P3_UNIT_TEST(grid_value_assignment)
 	}
 }
 
+P3_UNIT_TEST(grid_data)
+{
+	const p3::grid<int, 5> grid({1, 1, 1, 1, 1});
+	if (&grid[0] != grid.data())
+	{
+		unit_test::assert_equals(0, 1, "grid::data() pointer does not match");
+	}
+}
+
 P3_UNIT_TEST(grid_inside)
 {
 	const p3::grid<int, 4> grid({ 8, 6, 3, 4 });
@@ -617,9 +626,10 @@ P3_UNIT_TEST(grid_iterate)
 P3_UNIT_TEST(grid_resize_predefined)
 {
 	using data_type = unsigned short;
+	using grid_type = p3::grid<data_type, 2>;
 
 	// I am aware that I'm using octal values here. as long as I don't go above 07, I'm fine.
-	const p3::grid<data_type, 2> original({ 5, 5 },
+	const grid_type original({ 5, 5 },
 	{
 		00, 01, 02, 03, 04,
 		10, 11, 12, 13, 14,
@@ -630,7 +640,7 @@ P3_UNIT_TEST(grid_resize_predefined)
 
 	const auto copy = original;
 
-	const p3::grid<data_type, 2> minus_minus({ 4, 3 },
+	const grid_type minus_minus({ 4, 3 },
 	{
 		00, 01, 02,
 		10, 11, 12,
@@ -638,14 +648,14 @@ P3_UNIT_TEST(grid_resize_predefined)
 		30, 31, 32
 	});
 
-	const p3::grid<data_type, 2> minus_plus({ 3, 6 },
+	const grid_type minus_plus({ 3, 6 },
 	{
 		00, 01, 02, 03, 04, 00,
 		10, 11, 12, 13, 14, 00,
 		20, 21, 22, 23, 24, 00
 	});
 
-	const p3::grid<data_type, 2> plus_minus({ 7, 2 },
+	const grid_type plus_minus({ 7, 2 },
 	{
 		00, 01,
 		10, 11,
@@ -656,7 +666,7 @@ P3_UNIT_TEST(grid_resize_predefined)
 		00, 00
 	});
 
-	const p3::grid<data_type, 2> plus_plus({ 7, 8 },
+	const grid_type plus_plus({ 7, 8 },
 	{
 		00, 01, 02, 03, 04, 00, 00, 00, 
 		10, 11, 12, 13, 14, 00, 00, 00,
@@ -667,11 +677,19 @@ P3_UNIT_TEST(grid_resize_predefined)
 		00, 00, 00, 00, 00, 00, 00, 00
 	});
 
-	const auto compare = [&](const auto &actual, const std::string &name)
+	const auto compare = [&](const grid_type &actual, const std::string &name)
 	{
-		auto grid = original;
-		grid.resize(actual.dim());
-		grid_test::assert_equal_grids(grid, actual, name);
+		const grid_type empty(actual.dim());
+		auto keep = original;
+		auto discard = original;
+
+		// keep data
+		keep.resize(actual.dim(), true);
+		grid_test::assert_equal_grids<data_type>(keep, actual, name + " (keep)");
+
+		// discard data
+		discard.resize(actual.dim());
+		grid_test::assert_equal_grids<data_type>(empty, discard, name + " (discard)");
 	};
 
 	compare(copy, "copy");

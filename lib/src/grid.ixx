@@ -595,6 +595,11 @@ public:
 			return m_data.size();
 		}
 
+		[[nodiscard]] constexpr const data_type *data() const
+		{
+			return m_data.data();
+		}
+
 		[[nodiscard]] constexpr size_t index_of(const grid_size<dimensions> &pos) const
 		{
 			return m_dim.index_of(pos);
@@ -721,13 +726,29 @@ public:
 		}
 
 		// preserves the positions of elements in the grid. cut-off elements due to axis shrinkage will be lost.
-		VEC_CXP void resize(const grid_size<dimensions> &size)
+		VEC_CXP void resize(const grid_size<dimensions> &size, bool keep_data = false)
 		{
-			// todo: make it faster (and in-place)
-			// it's nice how my constructors and abstractions theoretically allows me to make a oneliner out of this.
-			// however, this is a very naive and potentially expensive approach, as a whole grid gets copied. :/
-			// this is going to be similarly complicated and brain wrecking as grid::subgrid(), I fear...
-			*this = this_type(size, [&](const auto &pos) { return this->inside(pos.pos()) ? this->at(pos.pos()) : data_type{}; });
+			if (keep_data)
+			{
+				// todo: make it faster (and in-place)
+				// it's nice how my constructors and abstractions theoretically allows me to make a oneliner out of this.
+				// however, this is a very naive and potentially expensive approach, as a whole grid gets copied. :/
+				// this is going to be similarly complicated and brain wrecking as grid::subgrid(), I fear...
+				*this = this_type(size, [&](const auto &pos) { return this->inside(pos.pos()) ? this->at(pos.pos()) : data_type{}; });
+			}
+			else
+			{
+				m_dim = size;
+				m_data.resize(m_dim.elements());
+#if defined(INTELLISENSE_HACK)
+				for (auto &elem : m_data)
+				{
+					elem = {};
+				}
+#else
+				std::transform(m_data.begin(), m_data.end(), m_data.begin(), [](const auto &old) { return {}; });
+#endif
+			}
 		}
 
 	#pragma endregion
