@@ -7,22 +7,18 @@ export module p3.grid;
 import <vector>;
 import <array>;
 
-// here's a problem: intellisense is not happy with the following imports. If any of them is imported, I get:
+// import <functional>;
+// import <stdexcept>;
+// import <algorithm>;
+// import <numeric>;
+
+// here's a problem: intellisense is not happy with these imports. If any of them is imported, I get:
 // "E2996: There are too many errors for the IntelliSense engine to function properly".
 // the problem is: I'd rather have intellisense features during development than getting shorter code.
 // so I will provide the oneliners, but add a todo comment and do the manual implementation. That way I still get support from the IDE.
 // once the classes are finished, I add the imports it and swap out the manual implementations.
 // thanks to the added unit tests, I'll then be able to see if it broke or not.
-// ideally, this macro and all the #if statements will be gone in the future.
-#define INTELLISENSE_HACK
 
-#if !defined(INTELLISENSE_HACK)
-import <functional>;
-import <stdexcept>;
-import <algorithm>;
-import <iterator>;
-import <numeric>;
-#endif
 
 
 // also, big todo: replace this with actual constexpr once std::vector is actually constexpr compatible...
@@ -78,7 +74,8 @@ namespace p3
 
 		constexpr void fix_zeroes()
 		{
-#if defined(INTELLISENSE_HACK)
+			// todo: import <algorithm>;
+			// std::transform(this->begin(), this->end(), this->begin(), [](auto elem) { return std::max(1U, elem); });
 			for (auto &elem : *this)
 			{
 				if (!elem)
@@ -86,9 +83,6 @@ namespace p3
 					elem = 1;
 				}
 			}
-#else
-			std::transform(this->begin(), this->end(), this->begin(), [](auto elem) { return std::max(1U, elem); });
-#endif
 		}
 
 		/*
@@ -99,16 +93,14 @@ namespace p3
 			auto rend = this->rbegin();
 			std::advance(rend, dimensions - most_significant_axis);
 
-#if defined(INTELLISENSE_HACK)
+			// todo: import <numeric>; import <functional>;
+			// return std::accumulate(this->rbegin(), rend, 1, std::multiplies{});
 			size_t result = 1;
 			for (auto iter = this->rbegin(); iter != rend; ++iter)
 			{
 				result *= (*iter);
 			}
 			return result;
-#else
-			return std::accumulate(this->rbegin(), rend, 1, std::multiplies{});
-#endif
 		}
 
 		[[nodiscard]] constexpr size_t index_of(const grid_size<dimensions> &position) const
@@ -199,11 +191,9 @@ namespace p3
 
 			if (!in_bounds)
 			{
-#if defined(INTELLISENSE_HACK)
+				// todo: import <stdexcept>;
+				// throw std::out_of_range("grid_pos: position is outside its boundaries.");
 				throw "grid_pos: position is outside its boundaries.";
-#else
-				throw std::out_of_range("grid_pos: position is outside its boundaries.");
-#endif
 			}
 		}
 
@@ -257,16 +247,15 @@ namespace p3
 
 		constexpr void last()
 		{
-#if defined(INTELLISENSE_HACK)
+			// todo: import <algorithm>;
+			// std::transform(m_dim.begin(), m_dim.end(), m_pos.begin(), [](auto x) { return x > 0 ? x - 1 : 0; });
 			auto iter = m_pos.begin();
 			for (const auto &axis : m_dim)
 			{
 				*iter = axis ? axis - 1 : 0;
 				++iter;
 			}
-#else
-			std::transform(m_dim.begin(), m_dim.end(), m_pos.begin(), [](auto x) { return std::max<size_t>(x, 1); });
-#endif
+
 			m_valid = true;
 		}
 
@@ -437,11 +426,10 @@ namespace p3
 		template <typename data_type>
 		constexpr auto axis_xor()
 		{
-#if defined(INTELLISENSE_HACK)
+			// todo: import <functional>;
+			// return axis_binary_operation<data_type, std::bit_xor<data_type>>();
+
 			return axis_binary_operation<data_type>(0, [](const auto &a, const auto &b) { return a ^ b; });
-#else
-			return axis_binary_operation<data_type, std::bit_xor<data_type>>();
-#endif
 		}
 	}
 
@@ -472,7 +460,7 @@ public:
 		// default constructor
 		VEC_CXP grid() = default;
 
-		// implicit nested list constructor. would be cool to have, but I'm not sure if this collides with other constructors.
+		// implicit nested list constructor
 		// grid(const nested_list_t<data_type, dimensions> &list);
 
 		// size constructor
@@ -487,14 +475,12 @@ public:
 		{
 			const auto fill = [&]()
 			{
-#if defined(INTELLISENSE_HACK)
+				// todo: import <algorithm>;
+				// std::copy(init.begin(), init.end(), std::back_inserter(m_data));
 				for (const auto &item : init)
 				{
 					m_data.push_back(item);
 				}
-#else
-				std::copy(init.begin(), init.end(), std::back_inserter(m_data));
-#endif
 			};
 			reserve_fill_resize(fill);
 		}
@@ -506,14 +492,12 @@ public:
 		{
 			const auto fill = [&]() 
 			{
-#if defined(INTELLISENSE_HACK)
+				// todo: import <algorithm>;
+				// std::copy(begin, end, std::back_inserter(m_data));
 				for (auto iter = begin; iter != end; ++iter)
 				{
 					m_data.push_back(*iter);
 				}
-#else
-				std::copy(begin, end, std::back_inserter(m_data));
-#endif
 			};
 			reserve_fill_resize(fill);
 		}
