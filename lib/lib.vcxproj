@@ -156,6 +156,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\dummy.cpp" />
+    <ClCompile Include="src\meta\implemented.ixx" />
+    <ClCompile Include="src\meta\list.ixx" />
+    <ClCompile Include="src\meta\list\core.ixx" />
+    <ClCompile Include="src\meta\list\manipulators.ixx" />
+    <ClCompile Include="src\meta\_meta.ixx" />
     <ClCompile Include="src\persistence.ixx" />
     <ClCompile Include="src\grid.ixx" />
   </ItemGroup>

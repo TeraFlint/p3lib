@@ -24,5 +24,20 @@
     <ClCompile Include="src\persistence.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\meta\_meta.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\meta\list.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\meta\implemented.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\meta\list\core.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\meta\list\manipulators.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
