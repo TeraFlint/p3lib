@@ -1,14 +1,12 @@
+#include <filesystem>
+#include <iostream>
+#include <fstream>
+
 export module p3.persistence;
 
-import <iostream>;
-import <fstream>;
-
-// see p3.grid
-#define INTELLISENSE_HACK
-
-#if !defined(INTELLISENSE_HACK)
-import <filesystem>;
-#endif
+// import <filesystem>;
+// import <iostream>;
+// import <fstream>;
 
 namespace p3
 {
@@ -39,23 +37,19 @@ namespace p3
 	class file_access
 	{
 	public:
-#if defined(INTELLISENSE_HACK)
-		using path_type = const char *;
-#else
 		using path_type = std::filesystem::path;
-#endif
+
 		class no_file      : public std::exception { using std::exception::exception; };
 		class no_directory : public std::exception { using std::exception::exception; };
 		class custom_error : public std::exception { using std::exception::exception; };
 
 		void load(const path_type &location)
 		{
-#if !defined(INTELLISENSE_HACK)
 			if (!std::filesystem::exists(location))
 			{
 				throw no_file("loading: file not found.");
 			}
-#endif
+
 			if (!on_load(location))
 			{
 				throw custom_error("loading: on_load returned false.");
@@ -64,7 +58,6 @@ namespace p3
 
 		void save(const path_type &location, bool create = false) const
 		{
-#if !defined(INTELLISENSE_HACK)
 			if (!directory_exists(location))
 			{
 				if (!create || !create_path(location))
@@ -72,7 +65,7 @@ namespace p3
 					throw no_directory("saving: directory not found.");
 				}
 			}
-#endif
+
 			if (!on_save(location))
 			{
 				throw custom_error("saving: on_safe returned false.");
@@ -81,9 +74,6 @@ namespace p3
 
 		static bool directory_exists(const path_type &location)
 		{
-#if defined(INTELLISENSE_HACK)
-			return true;
-#else
 			namespace fs = std::filesystem;
 			if (fs::is_directory(location))
 			{
@@ -91,19 +81,14 @@ namespace p3
 			}
 			const fs::path parent = location.parent_path();
 			return parent.empty() ? true : fs::exists(parent);
-#endif
 		}
 
 		static bool create_path(const path_type &location)
 		{
-#if defined(INTELLISENSE_HACK)
-			return true;
-#else
 			namespace fs = std::filesystem;
 			return fs::is_directory(location) ?
 				fs::create_directories(location) :
 				fs::create_directories(location.parent_path());
-#endif
 		}
 
 	protected:
