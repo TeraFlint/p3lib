@@ -18,25 +18,25 @@
     <ClCompile Include="src\dummy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\grid.ixx">
+    <ClCompile Include="src\p3_grid.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\persistence.ixx">
+    <ClCompile Include="src\p3_persistence.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\_meta.ixx">
+    <ClCompile Include="src\meta\p3_meta.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\list.ixx">
+    <ClCompile Include="src\meta\list\p3_meta_list.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\implemented.ixx">
+    <ClCompile Include="src\meta\p3_meta_implemented.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\list\core.ixx">
+    <ClCompile Include="src\meta\list\p3_meta_list_core.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\list\manipulators.ixx">
+    <ClCompile Include="src\meta\list\p3_meta_list_manipulators.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

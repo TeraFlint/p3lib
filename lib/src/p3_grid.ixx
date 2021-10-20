@@ -7,7 +7,6 @@
 #include <numeric>    // std::accumulate()
 #include <vector>
 #include <array>
-
 export module p3.grid;
 /*
 	Grid module, part of github/TeraFlint/pitrilib.

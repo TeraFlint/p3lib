@@ -156,13 +156,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\dummy.cpp" />
-    <ClCompile Include="src\meta\implemented.ixx" />
-    <ClCompile Include="src\meta\list.ixx" />
-    <ClCompile Include="src\meta\list\core.ixx" />
-    <ClCompile Include="src\meta\list\manipulators.ixx" />
-    <ClCompile Include="src\meta\_meta.ixx" />
-    <ClCompile Include="src\persistence.ixx" />
-    <ClCompile Include="src\grid.ixx" />
+    <ClCompile Include="src\meta\p3_meta_implemented.ixx" />
+    <ClCompile Include="src\meta\list\p3_meta_list.ixx" />
+    <ClCompile Include="src\meta\list\p3_meta_list_core.ixx" />
+    <ClCompile Include="src\meta\list\p3_meta_list_manipulators.ixx" />
+    <ClCompile Include="src\meta\p3_meta.ixx" />
+    <ClCompile Include="src\p3_persistence.ixx" />
+    <ClCompile Include="src\p3_grid.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
