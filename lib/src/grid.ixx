@@ -1,29 +1,26 @@
+// these #includes will be replaced by the imports once visual studio's intellisense can parse this without getting overwhelmed.
+// "E2996: There are too many errors for the IntelliSense engine to function properly".
+#include <functional> // std::bit_xor{}
+#include <stdexcept>
+#include <algorithm>  // std::transform()
+#include <iterator>   // std::back_inserter()
+#include <numeric>    // std::accumulate()
+#include <vector>
+#include <array>
+
 export module p3.grid;
 /*
 	Grid module, part of github/TeraFlint/pitrilib.
 	Daniel Wiegert (Pitri), 2021.
 */
 
-import <vector>;
-import <array>;
-
-// here's a problem: intellisense is not happy with the following imports. If any of them is imported, I get:
-// "E2996: There are too many errors for the IntelliSense engine to function properly".
-// the problem is: I'd rather have intellisense features during development than getting shorter code.
-// so I will provide the oneliners, but add a todo comment and do the manual implementation. That way I still get support from the IDE.
-// once the classes are finished, I add the imports it and swap out the manual implementations.
-// thanks to the added unit tests, I'll then be able to see if it broke or not.
-// ideally, this macro and all the #if statements will be gone in the future.
-#define INTELLISENSE_HACK
-
-#if !defined(INTELLISENSE_HACK)
-import <functional>;
-import <stdexcept>;
-import <algorithm>;
-import <iterator>;
-import <numeric>;
-#endif
-
+// import <functional>; // std::bit_xor{}
+// import <stdexcept>;
+// import <algorithm>;  // std::transform()
+// import <iterator>;   // std::back_inserter()
+// import <numeric>;    // std::accumulate()
+// import <vector>;
+// import <array>;
 
 // also, big todo: replace this with actual constexpr once std::vector is actually constexpr compatible...
 // the standard says it should be, yet it hasn't been implemented, yet?
@@ -34,7 +31,7 @@ namespace p3
 #pragma region helper functions (not supposed to be exported)
 
 	template <typename iter1_type, typename iter2_type, typename function_type>
-	static constexpr bool dual_iteration_n(size_t iterations, iter1_type iter1, iter2_type iter2, const function_type &callback)
+	static constexpr bool dual_iteration_n(size_t iterations, iter1_type &&iter1, iter2_type &&iter2, function_type &&callback)
 	{
 		for (size_t i = 0; i < iterations; ++i, ++iter1, ++iter2)
 		{
@@ -50,12 +47,14 @@ namespace p3
 #pragma region nested list
 
 	/*
+	export
 	template <typename data_type, size_t dimensions>
 	struct nested_list
 	{
 		using type = std::initializer_list<typename nested_list<data_type, dimensions - 1>::type>;
 	};
 
+	export
 	template <typename data_type>
 	struct nested_list<data_type, 0>
 	{
@@ -78,17 +77,7 @@ namespace p3
 
 		constexpr void fix_zeroes()
 		{
-#if defined(INTELLISENSE_HACK)
-			for (auto &elem : *this)
-			{
-				if (!elem)
-				{
-					elem = 1;
-				}
-			}
-#else
 			std::transform(this->begin(), this->end(), this->begin(), [](auto elem) { return std::max(1U, elem); });
-#endif
 		}
 
 		/*
@@ -98,17 +87,7 @@ namespace p3
 		{
 			auto rend = this->rbegin();
 			std::advance(rend, dimensions - most_significant_axis);
-
-#if defined(INTELLISENSE_HACK)
-			size_t result = 1;
-			for (auto iter = this->rbegin(); iter != rend; ++iter)
-			{
-				result *= (*iter);
-			}
-			return result;
-#else
 			return std::accumulate(this->rbegin(), rend, 1, std::multiplies{});
-#endif
 		}
 
 		[[nodiscard]] constexpr size_t index_of(const grid_size<dimensions> &position) const
@@ -199,11 +178,7 @@ namespace p3
 
 			if (!in_bounds)
 			{
-#if defined(INTELLISENSE_HACK)
-				throw "grid_pos: position is outside its boundaries.";
-#else
 				throw std::out_of_range("grid_pos: position is outside its boundaries.");
-#endif
 			}
 		}
 
@@ -257,16 +232,7 @@ namespace p3
 
 		constexpr void last()
 		{
-#if defined(INTELLISENSE_HACK)
-			auto iter = m_pos.begin();
-			for (const auto &axis : m_dim)
-			{
-				*iter = axis ? axis - 1 : 0;
-				++iter;
-			}
-#else
 			std::transform(m_dim.begin(), m_dim.end(), m_pos.begin(), [](auto x) { return std::max<size_t>(x, 1); });
-#endif
 			m_valid = true;
 		}
 
@@ -376,7 +342,8 @@ namespace p3
 	template <typename function_type, size_t dim>
 	concept grid_generator = requires(function_type function)
 	{
-		{ function(grid_pos<dim>{}) } -> any_type;
+		// { function(grid_pos<dim>{}) } -> any_type;
+		function(grid_pos<dim>{});
 	};
 
 	namespace grid_gen
@@ -437,11 +404,7 @@ namespace p3
 		template <typename data_type>
 		constexpr auto axis_xor()
 		{
-#if defined(INTELLISENSE_HACK)
-			return axis_binary_operation<data_type>(0, [](const auto &a, const auto &b) { return a ^ b; });
-#else
 			return axis_binary_operation<data_type, std::bit_xor<data_type>>();
-#endif
 		}
 	}
 
@@ -485,17 +448,7 @@ public:
 		explicit VEC_CXP grid(const grid_size<dimensions> &size, const std::initializer_list<data_type> &init)
 			: m_dim{ size.fit_to_data(init.size()) }
 		{
-			const auto fill = [&]()
-			{
-#if defined(INTELLISENSE_HACK)
-				for (const auto &item : init)
-				{
-					m_data.push_back(item);
-				}
-#else
-				std::copy(init.begin(), init.end(), std::back_inserter(m_data));
-#endif
-			};
+			const auto fill = [&]() { std::copy(init.begin(), init.end(), std::back_inserter(m_data)); };
 			reserve_fill_resize(fill);
 		}
 
@@ -504,23 +457,13 @@ public:
 		explicit VEC_CXP grid(const grid_size<dimensions> &size, const begin_type &begin, const end_type &end)
 			: m_dim{ size.fit_to_data(std::distance(begin, end)) }
 		{
-			const auto fill = [&]() 
-			{
-#if defined(INTELLISENSE_HACK)
-				for (auto iter = begin; iter != end; ++iter)
-				{
-					m_data.push_back(*iter);
-				}
-#else
-				std::copy(begin, end, std::back_inserter(m_data));
-#endif
-			};
+			const auto fill = [&]() { std::copy(begin, end, std::back_inserter(m_data)); };
 			reserve_fill_resize(fill);
 		}
 
 		// size + generator constructor
 		template <grid_generator<dimensions> generator_type>
-		explicit VEC_CXP grid(const grid_size<dimensions> &size, generator_type generator)
+		explicit VEC_CXP grid(const grid_size<dimensions> &size, generator_type &&generator)
 			: m_dim{ size }
 		{
 			const auto fill = [&]()
@@ -535,7 +478,7 @@ public:
 
 		// grid + converter constructor
 		template <typename compatible_type, typename converter_type>
-		explicit VEC_CXP grid(const grid<compatible_type, dimensions> &other, converter_type converter)
+		explicit VEC_CXP grid(const grid<compatible_type, dimensions> &other, converter_type &&converter)
 			: m_dim{ other.dim() }
 		{
 			const auto fill = [&]()
@@ -560,7 +503,7 @@ public:
 
 	private:
 		template <typename function_type>
-		VEC_CXP void reserve_fill_resize(const function_type &fill)
+		VEC_CXP void reserve_fill_resize(function_type &&fill)
 		{
 			// performs one single allocation and grows into the space (with default objects) in the end.
 			const auto elements = m_dim.elements();
@@ -703,7 +646,7 @@ public:
 
 		// read-write iteration (with position information)
 		template <typename function_type>
-		VEC_CXP void iterate(const function_type &function)
+		VEC_CXP void iterate(function_type &&function)
 		{
 			grid_pos<dimensions> pos{ m_dim };
 			for (auto &item : m_data)
@@ -715,7 +658,7 @@ public:
 
 		// read-only iteration (with position information)
 		template <typename function_type>
-		VEC_CXP void iterate(const function_type &function) const
+		VEC_CXP void iterate(function_type &&function) const
 		{
 			grid_pos<dimensions> pos{ m_dim };
 			for (const auto &item : m_data)
@@ -740,19 +683,12 @@ public:
 			{
 				m_dim = size;
 				m_data.resize(m_dim.elements());
-#if defined(INTELLISENSE_HACK)
-				for (auto &elem : m_data)
-				{
-					elem = {};
-				}
-#else
-				std::transform(m_data.begin(), m_data.end(), m_data.begin(), [](const auto &old) { return {}; });
-#endif
+				std::transform(m_data.begin(), m_data.end(), m_data.begin(), [](const auto &old) { return data_type{}; });
 			}
 		}
 
 	#pragma endregion
-	#pragma region partitons (subgrid, slice)
+	#pragma region partitions (subgrid, slice)
 
 	private:
 		struct slice_info
