@@ -373,7 +373,7 @@ namespace p3
 
 		export
 		template <typename data_type, typename function_type>
-		constexpr auto axis_binary_operation(const data_type &identity = {}, const function_type &binary_operation = {})
+		constexpr auto axis_binary_operation(data_type &&identity = {}, function_type &&binary_operation = {})
 		{
 			return [=](const auto &pos)
 			{
