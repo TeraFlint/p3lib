@@ -8,9 +8,14 @@
 #include <memory>
 #include <map>
 
+import p3.unit_test;
+
 #pragma region macro
 
 // P3_UNIT_TEST(unique_name) { /* code */ }
+#define P3_UNIT_TEST(name) struct name : p3::unit_test::test_case<name> { void run_test() const; }; void name::run_test() const
+
+/*
 #define P3_UNIT_TEST(name) namespace unit_test_cases\
 {\
 	struct name : unit_test::basic_test\
@@ -23,6 +28,7 @@
 };\
 unit_test::test_factory_inserter<unit_test_cases::name> unit_test_cases::name::inserter = unit_test::test_factory_inserter<unit_test_cases::name>(#name);\
 void unit_test_cases::name::run_test() const
+*/
 
 #pragma endregion
 
@@ -30,6 +36,7 @@ namespace unit_test
 {
 #pragma region constants
 
+	/*
 	namespace text
 	{
 		// once std::string actually becomes constexpr compatible, I'll use this instead of the literals down there.
@@ -186,6 +193,7 @@ namespace unit_test
 		evaluate(successful, total);
 	}
 
+*/
 #pragma endregion
 #pragma region exceptions
 

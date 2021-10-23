@@ -161,8 +161,12 @@
     <ClCompile Include="src\p3\meta\list\p3.meta.list.core.ixx" />
     <ClCompile Include="src\p3\meta\list\p3.meta.list.manipulators.ixx" />
     <ClCompile Include="src\p3\meta\p3.meta.ixx" />
+    <ClCompile Include="src\p3\p3.console_format.ixx" />
     <ClCompile Include="src\p3\p3.persistence.ixx" />
     <ClCompile Include="src\p3\p3.grid.ixx" />
+    <ClCompile Include="src\p3\unit_test\p3.unit_test.assert.ixx" />
+    <ClCompile Include="src\p3\unit_test\p3.unit_test.core.ixx" />
+    <ClCompile Include="src\p3\unit_test\p3.unit_test.ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

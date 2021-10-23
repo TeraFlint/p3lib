@@ -39,5 +39,17 @@
     <ClCompile Include="src\p3\meta\list\p3.meta.list.manipulators.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\p3\p3.console_format.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p3\unit_test\p3.unit_test.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p3\unit_test\p3.unit_test.core.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p3\unit_test\p3.unit_test.assert.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
