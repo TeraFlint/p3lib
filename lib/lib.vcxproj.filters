@@ -18,25 +18,25 @@
     <ClCompile Include="src\dummy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\p3_grid.ixx">
+    <ClCompile Include="src\p3\p3.grid.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\p3_persistence.ixx">
+    <ClCompile Include="src\p3\p3.persistence.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\p3_meta.ixx">
+    <ClCompile Include="src\p3\meta\p3.meta.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\list\p3_meta_list.ixx">
+    <ClCompile Include="src\p3\meta\list\p3.meta.list.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\p3_meta_implemented.ixx">
+    <ClCompile Include="src\p3\meta\p3.meta.implemented.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\list\p3_meta_list_core.ixx">
+    <ClCompile Include="src\p3\meta\list\p3.meta.list.core.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\meta\list\p3_meta_list_manipulators.ixx">
+    <ClCompile Include="src\p3\meta\list\p3.meta.list.manipulators.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
