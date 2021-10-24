@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <format>
+#include <chrono>
 #include <map>
 export module p3.unit_test.core;
 /*
@@ -14,6 +15,7 @@ export import p3.console_format;
 // import <memory>;
 // import <string>;
 // import <format>;
+// import <chrono>;
 // import <map>;
 
 namespace p3
@@ -41,7 +43,7 @@ namespace p3
 		std::map<std::string, std::unique_ptr<basic_factory>> private_factory_map;
 
 #pragma endregion
-#pragma region factory, inserter, basic test case
+#pragma region factory, inserter
 
 		export
 		template <typename test_type>
@@ -98,12 +100,14 @@ namespace p3
 			for (const auto &[name, creator] : private_factory_map)
 			{
 				std::cout << std::endl << "running test \"" << name << "\"..." << std::endl;
-				const auto test = creator->create();
+				const auto test_object = creator->create();
+
+				const auto begin_time = std::chrono::system_clock::now();
 
 				bool success = true;
 				try
 				{
-					test->run_test();
+					test_object->run_test();
 				}
 				catch (const std::exception &e)
 				{
@@ -121,8 +125,11 @@ namespace p3
 					std::cout << console::yellow.dark() << " -> Something not inheriting from std::exception has been thrown" << console::reset << std::endl;
 				}
 
+				const auto end_time = std::chrono::system_clock::now();
+				const auto delta_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - begin_time);
+
 				const auto color = success ? console::green : console::red;
-				std::cout << color.bright() << " -> test " << color.dark() << '"' << name << '"' << color.bright() << ' ' << (success ? "succeeded" : "failed") << console::reset << std::endl;
+				std::cout << color.bright() << " -> test " << color.dark() << '"' << name << '"' << color.bright() << ' ' << (success ? "succeeded" : "failed") << " (" << delta_time.count() << "ms)" << console::reset << std::endl;
 				result[name] = success;
 			}
 			return result;
