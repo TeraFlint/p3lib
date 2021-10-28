@@ -766,7 +766,7 @@ public:
 		constexpr auto subgrid_generator(const subgrid_info &info) const
 			requires(dimensions > 0)
 		{
-			return [info, ptr = &m_data[info.offset], progress = 0](const auto &pos) mutable
+			return [info, ptr = &m_data[info.offset], progress = 0U](const auto &pos) mutable
 				-> data_type
 			{
 				const data_type result = *ptr;

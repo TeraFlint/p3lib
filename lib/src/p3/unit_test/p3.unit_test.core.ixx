@@ -70,9 +70,16 @@ namespace p3
 			{
 				// I know, rtti is not the best thing to use, but I think for testing purposes it's fine.
 				// The performance itself is no problem, since we're pre-collecting all the names.
-				const std::string name = typeid(test_type).name();
+				std::string name = typeid(test_type).name();
 
-				// todo: remove all "struct ", "class " labels from the name.
+				for (const std::string replacement : { "struct ", "class " })
+				{
+					for (auto found = name.find(replacement); found != std::string::npos; found = name.find(replacement, found))
+					{
+						name.replace(found, replacement.size(), "");
+					}
+				}
+
 				std::clog << console::cyan.bright() << "registering test " << console::cyan.dark() << '"' << name << '"' << console::cyan.bright() << "..." << console::reset << std::endl;
 				private_factory_map[name] = std::make_unique<factory<test_type>>(name);
 			}

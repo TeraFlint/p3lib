@@ -27,6 +27,9 @@
     <ClInclude Include="src\tests\persistence_test.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\tests\meta_list_test.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">

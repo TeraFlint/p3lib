@@ -41,7 +41,21 @@ namespace p3
 		// level 1: list of types
 		export
 		template <typename ...contents>
-		struct types_1 : sized<sizeof...(contents)> {};
+		struct types_1 : sized<sizeof...(contents)> 
+		{
+			template <typename function_type>
+			static constexpr void for_each_type(function_type &&func)
+			{
+				(func.template operator()<contents>(), ...);
+			}
+
+			template <typename function_type, typename ...par_types>
+			static constexpr void for_each_value(function_type &&func, par_types &&...par)
+				requires(std::constructible_from<contents, par_types...> && ...)
+			{
+				(func(contents{ par... }), ...);
+			}
+		};
 
 		specialize
 		template <typename ...contents>
@@ -73,7 +87,14 @@ namespace p3
 		// level 1: list of values
 		export
 		template <auto ...contents>
-		struct values_1 : sized<sizeof...(contents)> {};
+		struct values_1 : sized<sizeof...(contents)> 
+		{
+			template <typename function_type, typename ...par_types>
+			static constexpr void for_each_value(function_type &&func)
+			{
+				(func(contents), ...);
+			}
+		};
 
 		specialize
 		template <auto ...contents>
