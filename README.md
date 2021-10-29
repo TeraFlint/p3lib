@@ -9,7 +9,7 @@ My aim is to keep it cross-platform, but depending on the situation with the pla
 If you're wondering where this weird namespace name is coming from: "P3" is my abbreviation of "Pitri".
 
 ## My plans moving forward
-### modules
+### Modules
 I love the C++20 modules. They:
 * Largely remove the need to separate code into `.hpp` and `.cpp`, which makes them one cohesive unit.
 * Don't leak macros (this is especially frustrating with `Windows.h`'s `min` and `max` macros meddling with the STL).
@@ -25,17 +25,17 @@ It is quite frustrating to continue at this point. I might have to go back to he
 
 I'm still trying to cling to modules as long as possible, just because of their potential and the future they'll probably have.
 
-### grid
+### Grid
 * Split up `p3::grid` into `p3::fixed_grid`, `p3::dynamic_grid` and `p3::sparse_grid`.
 * Make a `p3::grid` class which initially holds a `p3::sparse_grid` and converts it into a `p3::dynamic_grid`, once `p3::sparse_grid`'s space requirement grows beyond `p3::dynamic_grid`'s.
 
-### image
+### Image
 * Inherit from `dynamic_grid<color, 2>` for storage and especially constructors.
 * Inherit from `filestream_access` for basic I/O functionality.
 * Only focus on encoding/decoding image formats.
 * Proper marking of the unfinished implementation state for non-windows systems, if it happens to be using the WIC library.
 
-### meta type manipulation
+### Meta type manipulation
 Currently both the most interesting thing to me and the most affected by the module problems.
 * Algorithms operating on the type lists: concatenation, push/pop front/back, index of type, type of index, filter, sort, etc.
 * It's the one I'm interested in the most, but this type stuff combined with c++20 modules is relatively demanding on the visual studio IDE.
@@ -43,13 +43,13 @@ Currently both the most interesting thing to me and the most affected by the mod
 * Static compile time type name generator (which will need a lot of template specializations for the most used container types)
 * Mathematical type based formula abstraction, able to "collapse" to a single constant (or variable dependent types) during compilation.
 
-### unit tests
+### Unit tests
 * Specify a test result file format which is easily readable and compact.
 * Move all existing tests into their own modules (which I've tried, but unfortunately brought the modules to a critical mass again).
 * Of course: keep working in a test driven manner to keep the code coverage as high as possible.
 
-### automatic commit integrity tests
-* Setup pipeline to compile and run the tests.
+### Automatic commit integrity tests
+* Setup pipeline to compile and run the tests for each new commit.
 * Generating summaries (with the help of `unit_test`'s planned save file format).
 * Ensuring healthy code across compilers by taking (at least) "the big three" compilers into account. This should bring me out of my MSVC view and give me chances to grow and achieve awareness about compiler quirks, bugs and traps.
 * Find out how to set something like this up, since I have basically no idea how.
