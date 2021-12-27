@@ -160,7 +160,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\dummy.cpp" />
-    <ClCompile Include="src\p3\meta\p3.meta.implemented.ixx" />
+    <ClCompile Include="src\p3\meta\p3.meta.implementation.ixx" />
     <ClCompile Include="src\p3\meta\list\p3.meta.list.ixx" />
     <ClCompile Include="src\p3\meta\list\p3.meta.list.core.ixx" />
     <ClCompile Include="src\p3\meta\list\p3.meta.list.manipulators.ixx" />
@@ -171,6 +171,11 @@
     <ClCompile Include="src\p3\unit_test\p3.unit_test.assert.ixx" />
     <ClCompile Include="src\p3\unit_test\p3.unit_test.core.ixx" />
     <ClCompile Include="src\p3\unit_test\p3.unit_test.ixx" />
+    <ClCompile Include="src\p3\vector\p3.vector.dense.ixx" />
+    <ClCompile Include="src\p3\vector\p3.vector.sparse.ixx" />
+    <ClCompile Include="src\p3\vector\p3.vector.dynamic.ixx" />
+    <ClCompile Include="src\p3\vector\p3.vector.fixed.ixx" />
+    <ClCompile Include="src\p3\vector\p3.vector..ixx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

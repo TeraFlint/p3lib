@@ -32,3 +32,20 @@ P3_UNIT_TEST(meta_list_for_each)
 		unit_test::assert_equals(*expected_iter, *actual_iter, "item mismatch");
 	}
 }
+
+P3_UNIT_TEST(meta_list_for_each_interoperability)
+{
+	using types = p3::meta::types<bool, int, float, double, short>;
+
+	auto function = [name = 'a'](auto&& obj = {}) mutable
+	{
+		std::cout << " - const " << typeid(decltype(obj)).name() << "\t" << name++ << " = " << obj << ";" << std::endl;
+	};
+
+	std::cout << "for_each_value:" << std::endl;
+	types::for_each_value(function, -1337.42);
+	std::cout << "for_each_type:" << std::endl;
+	types::for_each_type(function);
+
+	// test passes if it compiles.
+}

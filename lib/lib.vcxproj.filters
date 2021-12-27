@@ -30,7 +30,7 @@
     <ClCompile Include="src\p3\meta\list\p3.meta.list.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\p3\meta\p3.meta.implemented.ixx">
+    <ClCompile Include="src\p3\meta\p3.meta.implementation.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\p3\meta\list\p3.meta.list.core.ixx">
@@ -49,6 +49,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\p3\unit_test\p3.unit_test.assert.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p3\vector\p3.vector..ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p3\vector\p3.vector.fixed.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p3\vector\p3.vector.dynamic.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p3\vector\p3.vector.sparse.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p3\vector\p3.vector.dense.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
