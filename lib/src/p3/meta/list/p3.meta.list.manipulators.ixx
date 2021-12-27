@@ -35,7 +35,7 @@ namespace p3
 		template <template <typename> typename list_manipulator, typename ...pack>
 		struct to_pack_manipulator
 		{
-			using type = list_manipulator<types<pack...>>::type;
+			using type = list_manipulator<type_list<pack...>>::type;
 		};
 
 		// template <typename list>
@@ -45,7 +45,7 @@ namespace p3
 		struct to_list_manipulator {};
 
 		template <template <typename...> typename pack_manipulator, typename ...contents>
-		struct to_list_manipulator<pack_manipulator, types<contents...>>
+		struct to_list_manipulator<pack_manipulator, type_list<contents...>>
 		{
 			using type = pack_manipulator<contents...>::type;
 		};

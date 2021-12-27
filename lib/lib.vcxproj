@@ -161,7 +161,7 @@
   <ItemGroup>
     <ClCompile Include="src\dummy.cpp" />
     <ClCompile Include="src\p3\meta\p3.meta.implementation.ixx" />
-    <ClCompile Include="src\p3\meta\list\p3.meta.list.ixx" />
+    <ClCompile Include="src\p3\meta\list\p3.meta.list..ixx" />
     <ClCompile Include="src\p3\meta\list\p3.meta.list.core.ixx" />
     <ClCompile Include="src\p3\meta\list\p3.meta.list.manipulators.ixx" />
     <ClCompile Include="src\p3\meta\p3.meta.ixx" />
